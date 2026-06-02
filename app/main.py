@@ -2,9 +2,12 @@ from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.api import persons
 from app.core.database import engine
 
 app = FastAPI(title="GiftLedger")
+
+app.include_router(persons.router)
 
 
 @app.get("/health")
