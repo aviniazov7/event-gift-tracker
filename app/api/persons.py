@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.schemas.person import PersonCreate, PersonRead, PersonUpdate
+from app.schemas.stats import ReciprocityRead
 from app.services.person_service import PersonService
+from app.services.stats_service import StatsService
 
 router = APIRouter(prefix="/persons", tags=["persons"])
 
@@ -11,6 +13,12 @@ router = APIRouter(prefix="/persons", tags=["persons"])
 def get_service(db: Session = Depends(get_db)) -> PersonService:
     """Provide a request-scoped PersonService wired to the DB session."""
     return PersonService(db)
+
+
+def get_stats_service(db: Session = Depends(get_db)) -> StatsService:
+    """Reciprocity is reporting logic, so it lives in StatsService even though
+    the route is nested under a person."""
+    return StatsService(db)
 
 
 @router.get("", response_model=list[PersonRead])
@@ -46,3 +54,10 @@ def delete_person(
     person_id: int, service: PersonService = Depends(get_service)
 ) -> None:
     service.delete(person_id)
+
+
+@router.get("/{person_id}/reciprocity", response_model=ReciprocityRead)
+def get_person_reciprocity(
+    person_id: int, service: StatsService = Depends(get_stats_service)
+) -> ReciprocityRead:
+    return service.reciprocity(person_id)

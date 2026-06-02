@@ -1,7 +1,9 @@
-from sqlalchemy import select
+from decimal import Decimal
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.transaction import Transaction
+from app.models.transaction import Direction, Transaction
 from app.schemas.transaction import TransactionFilter
 
 
@@ -56,3 +58,20 @@ class TransactionRepository:
     def delete(self, transaction: Transaction) -> None:
         self.db.delete(transaction)
         self.db.commit()
+
+    def sum_by_direction(
+        self, person_id: int | None = None
+    ) -> dict[Direction, Decimal]:
+        """Total amount per direction, computed in SQL (SUM ... GROUP BY).
+
+        Optionally scoped to a single person. Directions with no transactions
+        are simply absent from the result; callers default them to 0.
+        """
+        stmt = select(
+            Transaction.direction, func.sum(Transaction.amount)
+        ).group_by(Transaction.direction)
+
+        if person_id is not None:
+            stmt = stmt.where(Transaction.person_id == person_id)
+
+        return {direction: total for direction, total in self.db.execute(stmt)}
