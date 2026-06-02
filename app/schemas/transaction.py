@@ -44,3 +44,18 @@ class TransactionRead(TransactionBase):
     created_at: dt.datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionFilter(BaseModel):
+    """Optional filters for listing transactions. Every field is independent
+    and combined with AND in the repository; all-None means "no filtering"."""
+
+    direction: Direction | None = None
+    person_id: int | None = None
+    event_id: int | None = None
+    # Inclusive range on the transaction date.
+    date_from: dt.date | None = None
+    date_to: dt.date | None = None
+    # Inclusive range on the amount.
+    min_amount: Decimal | None = Field(default=None, gt=0)
+    max_amount: Decimal | None = Field(default=None, gt=0)

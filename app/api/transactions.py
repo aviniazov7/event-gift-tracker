@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, status
+import datetime as dt
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.transaction import Direction
 from app.schemas.transaction import (
     TransactionCreate,
+    TransactionFilter,
     TransactionRead,
     TransactionUpdate,
 )
@@ -20,8 +25,26 @@ def get_service(db: Session = Depends(get_db)) -> TransactionService:
 @router.get("", response_model=list[TransactionRead])
 def list_transactions(
     service: TransactionService = Depends(get_service),
+    direction: Direction | None = Query(default=None),
+    person_id: int | None = Query(default=None),
+    event_id: int | None = Query(default=None),
+    date_from: dt.date | None = Query(default=None),
+    date_to: dt.date | None = Query(default=None),
+    min_amount: Decimal | None = Query(default=None, gt=0),
+    max_amount: Decimal | None = Query(default=None, gt=0),
 ) -> list[TransactionRead]:
-    return service.list()
+    # Parsing query params into the filter DTO is all the router does; the
+    # actual query is built in the repository.
+    filters = TransactionFilter(
+        direction=direction,
+        person_id=person_id,
+        event_id=event_id,
+        date_from=date_from,
+        date_to=date_to,
+        min_amount=min_amount,
+        max_amount=max_amount,
+    )
+    return service.list(filters)
 
 
 @router.post(

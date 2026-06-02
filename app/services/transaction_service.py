@@ -5,7 +5,11 @@ from app.models.transaction import Transaction
 from app.repositories.event_repo import EventRepository
 from app.repositories.person_repo import PersonRepository
 from app.repositories.transaction_repo import TransactionRepository
-from app.schemas.transaction import TransactionCreate, TransactionUpdate
+from app.schemas.transaction import (
+    TransactionCreate,
+    TransactionFilter,
+    TransactionUpdate,
+)
 
 
 class TransactionService:
@@ -26,8 +30,8 @@ class TransactionService:
         transaction = Transaction(**data.model_dump())
         return self.repo.create(transaction)
 
-    def list(self) -> list[Transaction]:
-        return self.repo.list()
+    def list(self, filters: TransactionFilter | None = None) -> list[Transaction]:
+        return self.repo.list(filters)
 
     def get(self, transaction_id: int) -> Transaction:
         transaction = self.repo.get(transaction_id)
