@@ -9,19 +9,20 @@ import {
 import SummaryHeader from "../components/SummaryHeader.jsx";
 import TransactionForm from "../components/TransactionForm.jsx";
 import TransactionCard from "../components/TransactionCard.jsx";
+import FilterBar, { emptyFilters } from "../components/FilterBar.jsx";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [persons, setPersons] = useState([]);
   const [events, setEvents] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [filters, setFilters] = useState(emptyFilters);
   const [status, setStatus] = useState("loading"); // loading | ready | error
 
-  // Initial load of everything the page needs.
+  // Static lists + overall summary load once.
   useEffect(() => {
-    Promise.all([getTransactions(), getPersons(), getEvents(), getSummary()])
-      .then(([txns, ppl, evts, sum]) => {
-        setTransactions(txns);
+    Promise.all([getPersons(), getEvents(), getSummary()])
+      .then(([ppl, evts, sum]) => {
         setPersons(ppl);
         setEvents(evts);
         setSummary(sum);
@@ -30,16 +31,22 @@ export default function TransactionsPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  // After a create, transactions and summary change; persons/events don't.
-  async function refreshLedger() {
-    const [txns, sum] = await Promise.all([getTransactions(), getSummary()]);
-    setTransactions(txns);
-    setSummary(sum);
-  }
+  // Re-fetch the list whenever the filters change (also runs on first mount).
+  useEffect(() => {
+    getTransactions(filters)
+      .then(setTransactions)
+      .catch(() => setStatus("error"));
+  }, [filters]);
 
+  // After a create, refresh the (currently-filtered) list and the summary.
   async function handleCreate(payload) {
     await createTransaction(payload);
-    await refreshLedger();
+    const [txns, sum] = await Promise.all([
+      getTransactions(filters),
+      getSummary(),
+    ]);
+    setTransactions(txns);
+    setSummary(sum);
   }
 
   // Lookup maps so each transaction can show names instead of ids.
@@ -76,6 +83,13 @@ export default function TransactionsPage() {
         onCreate={handleCreate}
       />
 
+      <FilterBar
+        persons={persons}
+        events={events}
+        filters={filters}
+        onChange={setFilters}
+      />
+
       <section className="space-y-5">
         <div className="flex items-baseline justify-between">
           <h2 className="text-xl font-semibold tracking-tight">תנועות</h2>
@@ -86,7 +100,7 @@ export default function TransactionsPage() {
 
         {transactions.length === 0 ? (
           <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted">
-            אין תנועות עדיין.
+            אין תנועות שתואמות את הסינון.
           </div>
         ) : (
           <ul className="space-y-3">

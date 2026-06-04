@@ -1,21 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPerson, getPersons } from "../api/client.js";
 import PersonForm from "../components/PersonForm.jsx";
-import { relationLabels } from "../utils/labels.js";
-
-function PersonCard({ person }) {
-  return (
-    <li className="flex items-center justify-between rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm">
-      <div className="space-y-1">
-        <p className="text-sm font-semibold text-ink">{person.full_name}</p>
-        {person.notes && <p className="text-sm text-muted">{person.notes}</p>}
-      </div>
-      <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
-        {relationLabels[person.relation] ?? person.relation}
-      </span>
-    </li>
-  );
-}
+import PersonCard from "../components/PersonCard.jsx";
 
 export default function PersonsPage() {
   const [persons, setPersons] = useState([]);

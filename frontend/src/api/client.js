@@ -24,12 +24,24 @@ function post(path, payload) {
   });
 }
 
-export function getTransactions() {
-  return request("/transactions");
+export function getTransactions(params = {}) {
+  // Only include filters that actually have a value.
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== "" && value !== null && value !== undefined) {
+      query.append(key, value);
+    }
+  }
+  const qs = query.toString();
+  return request(`/transactions${qs ? `?${qs}` : ""}`);
 }
 
 export function getPersons() {
   return request("/persons");
+}
+
+export function getReciprocity(personId) {
+  return request(`/persons/${personId}/reciprocity`);
 }
 
 export function getEvents() {
