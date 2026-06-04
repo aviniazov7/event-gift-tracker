@@ -16,6 +16,14 @@ async function request(path, options) {
   return res.status === 204 ? null : res.json();
 }
 
+function post(path, payload) {
+  return request(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getTransactions() {
   return request("/transactions");
 }
@@ -33,9 +41,13 @@ export function getSummary() {
 }
 
 export function createTransaction(payload) {
-  return request("/transactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  return post("/transactions", payload);
+}
+
+export function createPerson(payload) {
+  return post("/persons", payload);
+}
+
+export function createEvent(payload) {
+  return post("/events", payload);
 }

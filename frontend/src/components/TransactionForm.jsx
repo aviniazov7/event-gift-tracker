@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { directionOptions } from "../utils/labels.js";
-
-const fieldClasses =
-  "w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-ink " +
-  "outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100";
-
-function Field({ label, children }) {
-  return (
-    <label className="block space-y-1">
-      <span className="text-xs font-medium text-muted">{label}</span>
-      {children}
-    </label>
-  );
-}
+import { Field, fieldClasses } from "./FormField.jsx";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
