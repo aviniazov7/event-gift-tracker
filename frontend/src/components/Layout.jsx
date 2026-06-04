@@ -10,7 +10,7 @@ export default function Layout({ children }) {
             <h1 className="text-lg font-semibold tracking-tight text-ink">
               GiftLedger
             </h1>
-            <p className="text-xs text-muted">Gifts given &amp; received</p>
+            <p className="text-xs text-muted">מתנות שנתתי וקיבלתי</p>
           </div>
         </div>
       </header>

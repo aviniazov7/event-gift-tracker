@@ -2,7 +2,7 @@
 
 /* Warm, friendly theme tokens. Emerald is reserved for money. */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Heebo", ui-sans-serif, system-ui, sans-serif;
 
   --color-cream: #faf7f2;
   --color-card: #ffffff;

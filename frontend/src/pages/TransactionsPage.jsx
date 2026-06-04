@@ -1,94 +1,106 @@
-import { useEffect, useState } from "react";
-import { getTransactions } from "../api/client.js";
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
-function DirectionBadge({ direction }) {
-  const given = direction === "given";
-  return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        given
-          ? "bg-emerald-50 text-emerald-700"
-          : "bg-amber-50 text-amber-700"
-      }`}
-    >
-      {direction}
-    </span>
-  );
-}
-
-function TransactionCard({ tx }) {
-  return (
-    <li className="flex items-center justify-between rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <DirectionBadge direction={tx.direction} />
-          <span className="text-sm text-muted">{tx.date}</span>
-        </div>
-        <p className="text-sm text-muted">
-          Person #{tx.person_id} · Event #{tx.event_id}
-          {tx.notes ? ` · ${tx.notes}` : ""}
-        </p>
-      </div>
-      <span className="text-lg font-semibold text-emerald-600">
-        {currency.format(Number(tx.amount))}
-      </span>
-    </li>
-  );
-}
+import { useEffect, useMemo, useState } from "react";
+import {
+  createTransaction,
+  getEvents,
+  getPersons,
+  getSummary,
+  getTransactions,
+} from "../api/client.js";
+import SummaryHeader from "../components/SummaryHeader.jsx";
+import TransactionForm from "../components/TransactionForm.jsx";
+import TransactionCard from "../components/TransactionCard.jsx";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
+  const [persons, setPersons] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
 
+  // Initial load of everything the page needs.
   useEffect(() => {
-    getTransactions()
-      .then((data) => {
-        setTransactions(data);
+    Promise.all([getTransactions(), getPersons(), getEvents(), getSummary()])
+      .then(([txns, ppl, evts, sum]) => {
+        setTransactions(txns);
+        setPersons(ppl);
+        setEvents(evts);
+        setSummary(sum);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
   }, []);
 
-  return (
-    <section className="space-y-5">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">Transactions</h2>
-        {status === "ready" && (
-          <span className="text-sm text-muted">
-            {transactions.length} total
-          </span>
-        )}
+  // After a create, transactions and summary change; persons/events don't.
+  async function refreshLedger() {
+    const [txns, sum] = await Promise.all([getTransactions(), getSummary()]);
+    setTransactions(txns);
+    setSummary(sum);
+  }
+
+  async function handleCreate(payload) {
+    await createTransaction(payload);
+    await refreshLedger();
+  }
+
+  // Lookup maps so each transaction can show names instead of ids.
+  const personName = useMemo(() => {
+    const map = new Map(persons.map((p) => [p.id, p.full_name]));
+    return (id) => map.get(id) ?? `אדם #${id}`;
+  }, [persons]);
+
+  const eventName = useMemo(() => {
+    const map = new Map(events.map((e) => [e.id, e.title]));
+    return (id) => map.get(id) ?? `אירוע #${id}`;
+  }, [events]);
+
+  if (status === "loading") {
+    return <p className="text-sm text-muted">טוען נתונים…</p>;
+  }
+
+  if (status === "error") {
+    return (
+      <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+        לא הצלחנו להתחבר לשרת. ודאו שהשרת רץ בכתובת
+        <span className="font-medium"> http://localhost:8000</span>.
       </div>
+    );
+  }
 
-      {status === "loading" && (
-        <p className="text-sm text-muted">Loading transactions…</p>
-      )}
+  return (
+    <div className="space-y-8">
+      <SummaryHeader summary={summary} />
 
-      {status === "error" && (
-        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
-          Couldn&apos;t reach the API. Is the backend running on
-          <span className="font-medium"> http://localhost:8000</span>?
+      <TransactionForm
+        persons={persons}
+        events={events}
+        onCreate={handleCreate}
+      />
+
+      <section className="space-y-5">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-xl font-semibold tracking-tight">תנועות</h2>
+          <span className="text-sm text-muted">
+            {transactions.length} תנועות
+          </span>
         </div>
-      )}
 
-      {status === "ready" && transactions.length === 0 && (
-        <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted">
-          No transactions yet.
-        </div>
-      )}
-
-      {status === "ready" && transactions.length > 0 && (
-        <ul className="space-y-3">
-          {transactions.map((tx) => (
-            <TransactionCard key={tx.id} tx={tx} />
-          ))}
-        </ul>
-      )}
-    </section>
+        {transactions.length === 0 ? (
+          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted">
+            אין תנועות עדיין.
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {transactions.map((tx) => (
+              <TransactionCard
+                key={tx.id}
+                tx={tx}
+                personName={personName(tx.person_id)}
+                eventName={eventName(tx.event_id)}
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }
