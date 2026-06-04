@@ -1,3 +1,4 @@
+import { Gift } from "lucide-react";
 import ThemeToggle from "./ThemeToggle.jsx";
 import ShareButton from "./ShareButton.jsx";
 
@@ -11,8 +12,8 @@ export default function Layout({ onHome, children }) {
             onClick={onHome}
             className="flex items-center gap-3 text-right"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-lg">
-              🎁
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600">
+              <Gift className="h-5 w-5 text-white" strokeWidth={2} aria-hidden="true" />
             </span>
             <div>
               <h1 className="text-lg font-semibold tracking-tight text-ink">
