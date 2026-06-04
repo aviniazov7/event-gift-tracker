@@ -4,18 +4,16 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api import events, persons, stats, transactions
+from app.core.config import settings
 from app.core.database import engine
 
 app = FastAPI(title="GiftLedger")
 
-# Allow the Vite dev server (the React frontend) to call the API from the
-# browser. Kept to the local dev origins; tighten/extend for production.
+# Allow the frontend to call the API from the browser. Origins come from
+# config (CORS_ALLOW_ORIGINS) — local dev defaults, production injected via env.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

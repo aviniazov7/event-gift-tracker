@@ -1,5 +1,10 @@
 // Base URL of the GiftLedger API. Override with VITE_API_BASE if needed.
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+// Render injects another service's host without a scheme, so assume https for
+// a bare host; the local default already includes a scheme.
+const RAW_API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+const API_BASE = /^https?:\/\//.test(RAW_API_BASE)
+  ? RAW_API_BASE
+  : `https://${RAW_API_BASE}`;
 
 async function request(path, options) {
   const res = await fetch(`${API_BASE}${path}`, options);

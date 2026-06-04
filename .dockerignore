@@ -1,0 +1,25 @@
+# Never bake secrets or local env into the image
+.env
+.env.*
+!.env.example
+
+# VCS / CI
+.git
+.gitignore
+
+# Python caches and virtualenvs
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# The frontend is built and deployed separately (Render static site)
+frontend/
+
+# Tooling artifacts
+.playwright-mcp/
+*.md
+!README.md
