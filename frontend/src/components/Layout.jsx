@@ -1,4 +1,5 @@
 import ThemeToggle from "./ThemeToggle.jsx";
+import ShareButton from "./ShareButton.jsx";
 
 const NAV = [
   { key: "transactions", label: "תנועות" },
@@ -22,6 +23,7 @@ export default function Layout({ page, onNavigate, children }) {
               <p className="text-xs text-muted">מתנות שנתתי וקיבלתי</p>
             </div>
             <ThemeToggle />
+            <ShareButton />
           </div>
 
           <nav className="flex items-center gap-1 sm:mr-auto">
