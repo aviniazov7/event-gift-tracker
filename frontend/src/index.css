@@ -39,3 +39,57 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ---- react-day-picker theming (matches the warm theme + dark mode) ---- */
+.rdp-root {
+  --rdp-accent-color: var(--color-emerald-600);
+  --rdp-accent-background-color: var(--color-emerald-50);
+  --rdp-today-color: var(--color-emerald-600);
+  --rdp-day-width: 2.25rem;
+  --rdp-day-height: 2.25rem;
+  --rdp-day_button-width: 2.25rem;
+  --rdp-day_button-height: 2.25rem;
+  --rdp-day_button-border-radius: 0.625rem;
+  margin: 0;
+  color: var(--color-ink);
+}
+
+html.dark .rdp-root {
+  --rdp-accent-color: var(--color-emerald-500);
+  --rdp-accent-background-color: color-mix(
+    in oklab,
+    var(--color-emerald-500) 20%,
+    transparent
+  );
+  --rdp-today-color: var(--color-emerald-400);
+}
+
+/* Month/year caption follows the text color; weekday headers are muted. */
+.rdp-month_caption,
+.rdp-caption_label {
+  color: var(--color-ink);
+}
+.rdp-weekday {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* Nav chevrons + their hover use theme colors. */
+.rdp-chevron {
+  fill: var(--color-muted);
+}
+.rdp-button_previous:hover,
+.rdp-button_next:hover {
+  background-color: var(--rdp-accent-background-color);
+}
+
+/* Day hover + selected day. */
+.rdp-day_button:hover {
+  background-color: var(--rdp-accent-background-color);
+}
+.rdp-selected .rdp-day_button {
+  background-color: var(--rdp-accent-color);
+  border: 1px solid var(--rdp-accent-color);
+  color: #fff;
+  font-weight: 600;
+}

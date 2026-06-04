@@ -2,6 +2,7 @@ import { useState } from "react";
 import { eventTypeOptions } from "../utils/labels.js";
 import { Field, fieldClasses } from "./FormField.jsx";
 import Select from "./Select.jsx";
+import DatePicker from "./DatePicker.jsx";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -65,12 +66,9 @@ export default function EventQuickCreate({ onCreate }) {
         </Field>
 
         <Field label="תאריך">
-          <input
-            className={fieldClasses}
-            type="date"
+          <DatePicker
             value={form.event_date}
-            onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-            required
+            onChange={(iso) => setForm({ ...form, event_date: iso })}
           />
         </Field>
       </div>
