@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { directionOptions } from "../utils/labels.js";
 import { Field, fieldClasses } from "./FormField.jsx";
+import Select from "./Select.jsx";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -19,6 +20,8 @@ export default function TransactionForm({ persons, events, onCreate }) {
   const [submitting, setSubmitting] = useState(false);
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  // Select/combobox emit the value directly (not a DOM event).
+  const setValue = (key) => (value) => setForm({ ...form, [key]: value });
 
   const canSubmit =
     form.person_id && form.event_id && form.amount && form.date && !submitting;
@@ -54,35 +57,27 @@ export default function TransactionForm({ persons, events, onCreate }) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="אדם">
-          <select
-            className={fieldClasses}
+          <Select
             value={form.person_id}
-            onChange={set("person_id")}
-            required
-          >
-            <option value="">בחר אדם…</option>
-            {persons.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.full_name}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("person_id")}
+            placeholder="בחר אדם…"
+            options={persons.map((p) => ({
+              value: String(p.id),
+              label: p.full_name,
+            }))}
+          />
         </Field>
 
         <Field label="אירוע">
-          <select
-            className={fieldClasses}
+          <Select
             value={form.event_id}
-            onChange={set("event_id")}
-            required
-          >
-            <option value="">בחר אירוע…</option>
-            {events.map((ev) => (
-              <option key={ev.id} value={ev.id}>
-                {ev.title}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("event_id")}
+            placeholder="בחר אירוע…"
+            options={events.map((ev) => ({
+              value: String(ev.id),
+              label: ev.title,
+            }))}
+          />
         </Field>
 
         <Field label="סכום">
@@ -99,17 +94,14 @@ export default function TransactionForm({ persons, events, onCreate }) {
         </Field>
 
         <Field label="כיוון">
-          <select
-            className={fieldClasses}
+          <Select
             value={form.direction}
-            onChange={set("direction")}
-          >
-            {directionOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("direction")}
+            options={directionOptions.map(([value, label]) => ({
+              value,
+              label,
+            }))}
+          />
         </Field>
 
         <Field label="תאריך">

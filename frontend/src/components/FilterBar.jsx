@@ -1,5 +1,6 @@
 import { directionOptions } from "../utils/labels.js";
 import { Field, fieldClasses } from "./FormField.jsx";
+import Select from "./Select.jsx";
 
 const emptyFilters = {
   direction: "",
@@ -15,7 +16,22 @@ export { emptyFilters };
 
 export default function FilterBar({ persons, events, filters, onChange }) {
   const set = (key) => (e) => onChange({ ...filters, [key]: e.target.value });
+  // Select emits the value directly (not a DOM event).
+  const setValue = (key) => (value) => onChange({ ...filters, [key]: value });
   const hasActive = Object.values(filters).some((v) => v !== "");
+
+  const directionFilterOptions = [
+    { value: "", label: "הכול" },
+    ...directionOptions.map(([value, label]) => ({ value, label })),
+  ];
+  const personOptions = [
+    { value: "", label: "כל האנשים" },
+    ...persons.map((p) => ({ value: String(p.id), label: p.full_name })),
+  ];
+  const eventOptions = [
+    { value: "", label: "כל האירועים" },
+    ...events.map((ev) => ({ value: String(ev.id), label: ev.title })),
+  ];
 
   return (
     <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10">
@@ -34,48 +50,27 @@ export default function FilterBar({ persons, events, filters, onChange }) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="כיוון">
-          <select
-            className={fieldClasses}
+          <Select
             value={filters.direction}
-            onChange={set("direction")}
-          >
-            <option value="">הכול</option>
-            {directionOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("direction")}
+            options={directionFilterOptions}
+          />
         </Field>
 
         <Field label="אדם">
-          <select
-            className={fieldClasses}
+          <Select
             value={filters.person_id}
-            onChange={set("person_id")}
-          >
-            <option value="">כל האנשים</option>
-            {persons.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.full_name}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("person_id")}
+            options={personOptions}
+          />
         </Field>
 
         <Field label="אירוע">
-          <select
-            className={fieldClasses}
+          <Select
             value={filters.event_id}
-            onChange={set("event_id")}
-          >
-            <option value="">כל האירועים</option>
-            {events.map((ev) => (
-              <option key={ev.id} value={ev.id}>
-                {ev.title}
-              </option>
-            ))}
-          </select>
+            onChange={setValue("event_id")}
+            options={eventOptions}
+          />
         </Field>
 
         <Field label="מתאריך">
