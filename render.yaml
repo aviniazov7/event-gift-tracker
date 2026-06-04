@@ -44,12 +44,11 @@ services:
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
-      # Point the frontend at the backend's URL at build time.
+      # Point the frontend at the backend's URL at build time. Set explicitly:
+      # a `fromService` host reference did NOT resolve during the static build,
+      # so the value must be the full backend URL as a literal string.
       - key: VITE_API_BASE
-        fromService:
-          type: web
-          name: giftledger-api
-          property: host
+        value: https://giftledger-api.onrender.com
     routes:
       # SPA fallback so any path serves the app shell.
       - type: rewrite
