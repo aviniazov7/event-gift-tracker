@@ -1,0 +1,154 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  createPerson,
+  createTransaction,
+  getEvents,
+  getPersons,
+  getTransactions,
+} from "../api/client.js";
+import BackButton from "../components/BackButton.jsx";
+import QuickAddGift from "../components/QuickAddGift.jsx";
+import DirectionBadge from "../components/DirectionBadge.jsx";
+import { eventTypeLabels } from "../utils/labels.js";
+import { formatMoney } from "../utils/money.js";
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+function GiftRow({ gift, personName, onOpenPerson }) {
+  return (
+    <li className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
+      <div className="flex min-w-0 items-center gap-2">
+        <DirectionBadge direction={gift.direction} />
+        <button
+          type="button"
+          onClick={() => onOpenPerson(gift.person_id)}
+          className="truncate text-sm font-medium text-ink hover:underline"
+        >
+          {personName}
+        </button>
+      </div>
+      <span className="shrink-0 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+        {formatMoney(gift.amount)}
+      </span>
+    </li>
+  );
+}
+
+export default function EventDetail({ eventId, nav }) {
+  const [event, setEvent] = useState(null);
+  const [persons, setPersons] = useState([]);
+  const [gifts, setGifts] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+
+  async function loadGifts() {
+    setGifts(await getTransactions({ event_id: eventId }));
+  }
+
+  useEffect(() => {
+    Promise.all([
+      getEvents(),
+      getPersons(),
+      getTransactions({ event_id: eventId }),
+    ])
+      .then(([evts, ppl, txns]) => {
+        setEvent(evts.find((e) => e.id === eventId) ?? null);
+        setPersons(ppl);
+        setGifts(txns);
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
+  }, [eventId]);
+
+  const personName = useMemo(() => {
+    const map = new Map(persons.map((p) => [p.id, p.full_name]));
+    return (id) => map.get(id) ?? `אדם #${id}`;
+  }, [persons]);
+
+  // Create a person inline (from the combobox) and add to the local list.
+  async function handleCreatePerson(name) {
+    const person = await createPerson({
+      full_name: name,
+      relation: "other",
+      notes: null,
+    });
+    setPersons((prev) => [...prev, person]);
+    return person;
+  }
+
+  async function handleAdd({ person_id, direction, amount }) {
+    await createTransaction({
+      person_id,
+      event_id: eventId,
+      amount,
+      direction,
+      date: today(),
+      notes: null,
+    });
+    await loadGifts();
+  }
+
+  if (status === "loading") {
+    return <p className="text-sm text-muted">טוען…</p>;
+  }
+
+  if (status === "error" || !event) {
+    return (
+      <div>
+        <BackButton onClick={nav.back} />
+        <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          לא הצלחנו לטעון את האירוע.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <BackButton onClick={nav.back} />
+
+      <div className="space-y-8">
+        <header className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-2xl font-semibold tracking-tight">
+              {event.title}
+            </h2>
+            <span className="shrink-0 rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600 dark:bg-white/10 dark:text-stone-300">
+              {eventTypeLabels[event.type] ?? event.type}
+            </span>
+          </div>
+          <p className="text-sm text-muted">{event.event_date}</p>
+        </header>
+
+        <QuickAddGift
+          persons={persons}
+          onCreatePerson={handleCreatePerson}
+          onAdd={handleAdd}
+        />
+
+        <section className="space-y-5">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-lg font-semibold tracking-tight">מתנות</h3>
+            <span className="text-sm text-muted">{gifts.length} מתנות</span>
+          </div>
+
+          {gifts.length === 0 ? (
+            <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
+              אין מתנות לאירוע זה עדיין.
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {gifts.map((gift) => (
+                <GiftRow
+                  key={gift.id}
+                  gift={gift}
+                  personName={personName(gift.person_id)}
+                  onOpenPerson={nav.openPerson}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

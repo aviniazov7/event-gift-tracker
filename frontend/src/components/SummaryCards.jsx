@@ -17,7 +17,8 @@ function StatCard({ label, value, tone }) {
   );
 }
 
-export default function SummaryHeader({ summary }) {
+// Overall given/received/net across all events (from GET /stats/summary).
+export default function SummaryCards({ summary }) {
   if (!summary) return null;
 
   const net = Number(summary.net);
