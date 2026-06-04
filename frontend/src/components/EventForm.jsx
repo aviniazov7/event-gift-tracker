@@ -41,7 +41,7 @@ export default function EventForm({ onCreate }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm"
+      className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10"
     >
       <h3 className="text-base font-semibold tracking-tight">אירוע חדש</h3>
 
@@ -84,7 +84,7 @@ export default function EventForm({ onCreate }) {
         <label className="flex items-center gap-2 self-end py-2">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-black/20 text-emerald-600 focus:ring-emerald-200"
+            className="h-4 w-4 rounded border-black/20 text-emerald-600 focus:ring-emerald-200 dark:border-white/25 dark:bg-night dark:text-emerald-500 dark:focus:ring-emerald-500/30"
             checked={form.is_mine}
             onChange={(e) => setForm({ ...form, is_mine: e.target.checked })}
           />
@@ -92,12 +92,12 @@ export default function EventForm({ onCreate }) {
         </label>
       </div>
 
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
       >
         {submitting ? "מוסיף…" : "הוסף אירוע"}
       </button>

@@ -1,13 +1,30 @@
 @import "tailwindcss";
 
-/* Warm, friendly theme tokens. Emerald is reserved for money. */
+/* Class-based dark mode — the Tailwind v4 equivalent of `darkMode: 'class'`.
+   `dark:` variants apply when an ancestor (the <html>) has the `dark` class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Warm, friendly theme tokens. Emerald (נתתי) and amber (קיבלתי) are reserved
+   for money and get explicit dark: variants in the components. */
 @theme {
   --font-sans: "Heebo", ui-sans-serif, system-ui, sans-serif;
 
-  --color-cream: #faf7f2;
-  --color-card: #ffffff;
-  --color-ink: #2b2722;
-  --color-muted: #8a8275;
+  --color-cream: #faf7f2; /* page background */
+  --color-card: #ffffff; /* card surface */
+  --color-ink: #2b2722; /* primary text */
+  --color-muted: #8a8275; /* secondary text */
+
+  --color-night: #17150f; /* darkest surface, used by dark: variants (inputs) */
+}
+
+/* In dark mode retint the neutral tokens, so every bg-cream / bg-card /
+   text-ink / text-muted utility flips automatically with correct hierarchy
+   (page darkest, cards one step lighter, light text, muted secondary). */
+html.dark {
+  --color-cream: #17150f;
+  --color-card: #232019;
+  --color-ink: #f1ede6;
+  --color-muted: #a8a094;
 }
 
 html,

@@ -2,13 +2,13 @@ import { formatMoney } from "../utils/money.js";
 
 function StatCard({ label, value, tone }) {
   const tones = {
-    given: "text-emerald-600",
-    received: "text-amber-600",
-    netPositive: "text-emerald-600",
-    netNegative: "text-rose-600",
+    given: "text-emerald-600 dark:text-emerald-400",
+    received: "text-amber-600 dark:text-amber-400",
+    netPositive: "text-emerald-600 dark:text-emerald-400",
+    netNegative: "text-rose-600 dark:text-rose-400",
   };
   return (
-    <div className="rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm">
+    <div className="rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </p>

@@ -18,14 +18,14 @@ export default function FilterBar({ persons, events, filters, onChange }) {
   const hasActive = Object.values(filters).some((v) => v !== "");
 
   return (
-    <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold tracking-tight">סינון</h3>
         {hasActive && (
           <button
             type="button"
             onClick={() => onChange({ ...emptyFilters })}
-            className="text-xs font-medium text-emerald-700 hover:underline"
+            className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
           >
             נקה סינון
           </button>

@@ -33,7 +33,7 @@ export default function PersonForm({ onCreate }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm"
+      className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10"
     >
       <h3 className="text-base font-semibold tracking-tight">אדם חדש</h3>
 
@@ -76,12 +76,12 @@ export default function PersonForm({ onCreate }) {
         </div>
       </div>
 
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {error && <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}
 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
       >
         {submitting ? "מוסיף…" : "הוסף אדם"}
       </button>

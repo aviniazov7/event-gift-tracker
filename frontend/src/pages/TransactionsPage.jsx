@@ -66,7 +66,7 @@ export default function TransactionsPage() {
 
   if (status === "error") {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
         לא הצלחנו להתחבר לשרת. ודאו שהשרת רץ בכתובת
         <span className="font-medium"> http://localhost:8000</span>.
       </div>
@@ -99,7 +99,7 @@ export default function TransactionsPage() {
         </div>
 
         {transactions.length === 0 ? (
-          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted">
+          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
             אין תנועות שתואמות את הסינון.
           </div>
         ) : (

@@ -27,7 +27,7 @@ export default function PersonsPage() {
 
   if (status === "error") {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
         לא הצלחנו לטעון את האנשים. ודאו שהשרת רץ.
       </div>
     );
@@ -44,7 +44,7 @@ export default function PersonsPage() {
         </div>
 
         {persons.length === 0 ? (
-          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted">
+          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
             אין אנשים עדיין.
           </div>
         ) : (
