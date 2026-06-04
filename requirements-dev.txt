@@ -1,0 +1,4 @@
+# Test-only dependencies (kept out of the runtime image).
+-r requirements.txt
+pytest
+httpx
