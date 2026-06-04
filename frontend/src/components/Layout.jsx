@@ -5,7 +5,7 @@ export default function Layout({ onHome, children }) {
   return (
     <div className="min-h-full">
       <header className="border-b border-black/5 bg-cream/80 backdrop-blur dark:border-white/10">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-4">
+        <div className="mx-auto box-border flex w-full max-w-[40rem] items-center justify-between gap-3 px-4 py-4 md:max-w-3xl">
           <button
             type="button"
             onClick={onHome}
@@ -29,7 +29,9 @@ export default function Layout({ onHome, children }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-8">{children}</main>
+      <main className="mx-auto box-border w-full max-w-[40rem] px-4 py-8 md:max-w-3xl">
+        {children}
+      </main>
     </div>
   );
 }
