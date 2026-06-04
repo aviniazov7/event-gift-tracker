@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.models.transaction import Direction
+from app.models.user import User
 from app.schemas.transaction import (
     TransactionCreate,
     TransactionFilter,
@@ -25,6 +27,7 @@ def get_service(db: Session = Depends(get_db)) -> TransactionService:
 @router.get("", response_model=list[TransactionRead])
 def list_transactions(
     service: TransactionService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
     direction: Direction | None = Query(default=None),
     person_id: int | None = Query(default=None),
     event_id: int | None = Query(default=None),
@@ -34,7 +37,7 @@ def list_transactions(
     max_amount: Decimal | None = Query(default=None, gt=0),
 ) -> list[TransactionRead]:
     # Parsing query params into the filter DTO is all the router does; the
-    # actual query is built in the repository.
+    # actual (owner-scoped) query is built in the repository.
     filters = TransactionFilter(
         direction=direction,
         person_id=person_id,
@@ -44,7 +47,7 @@ def list_transactions(
         min_amount=min_amount,
         max_amount=max_amount,
     )
-    return service.list(filters)
+    return service.list(current_user.id, filters)
 
 
 @router.post(
@@ -53,15 +56,18 @@ def list_transactions(
 def create_transaction(
     payload: TransactionCreate,
     service: TransactionService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
 ) -> TransactionRead:
-    return service.create(payload)
+    return service.create(payload, current_user.id)
 
 
 @router.get("/{transaction_id}", response_model=TransactionRead)
 def get_transaction(
-    transaction_id: int, service: TransactionService = Depends(get_service)
+    transaction_id: int,
+    service: TransactionService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
 ) -> TransactionRead:
-    return service.get(transaction_id)
+    return service.get(transaction_id, current_user.id)
 
 
 @router.put("/{transaction_id}", response_model=TransactionRead)
@@ -69,14 +75,15 @@ def update_transaction(
     transaction_id: int,
     payload: TransactionUpdate,
     service: TransactionService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
 ) -> TransactionRead:
-    return service.update(transaction_id, payload)
+    return service.update(transaction_id, payload, current_user.id)
 
 
-@router.delete(
-    "/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
-    transaction_id: int, service: TransactionService = Depends(get_service)
+    transaction_id: int,
+    service: TransactionService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
 ) -> None:
-    service.delete(transaction_id)
+    service.delete(transaction_id, current_user.id)

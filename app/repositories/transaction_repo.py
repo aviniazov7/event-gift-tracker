@@ -8,27 +8,36 @@ from app.schemas.transaction import TransactionFilter
 
 
 class TransactionRepository:
-    """Pure database access for transactions — no business logic, no HTTP."""
+    """Pure database access for transactions — no business logic, no HTTP.
+
+    Every read is scoped to an owner_id so users only ever see their own data.
+    """
 
     def __init__(self, db: Session) -> None:
         self.db = db
 
     def create(self, transaction: Transaction) -> Transaction:
+        # owner_id is set on the model by the service before this is called.
         self.db.add(transaction)
         self.db.commit()
         self.db.refresh(transaction)
         return transaction
 
-    def get(self, transaction_id: int) -> Transaction | None:
-        return self.db.get(Transaction, transaction_id)
+    def get(self, transaction_id: int, owner_id: int) -> Transaction | None:
+        return self.db.scalar(
+            select(Transaction).where(
+                Transaction.id == transaction_id,
+                Transaction.owner_id == owner_id,
+            )
+        )
 
-    def list(self, filters: TransactionFilter | None = None) -> list[Transaction]:
-        stmt = select(Transaction)
+    def list(
+        self, owner_id: int, filters: TransactionFilter | None = None
+    ) -> list[Transaction]:
+        # Always scope to the owner; optional filters are ANDed on top.
+        conditions = [Transaction.owner_id == owner_id]
 
         if filters is not None:
-            # Each provided filter adds one condition; passing them all to a
-            # single .where() ANDs them together.
-            conditions = []
             if filters.direction is not None:
                 conditions.append(Transaction.direction == filters.direction)
             if filters.person_id is not None:
@@ -43,10 +52,8 @@ class TransactionRepository:
                 conditions.append(Transaction.amount >= filters.min_amount)
             if filters.max_amount is not None:
                 conditions.append(Transaction.amount <= filters.max_amount)
-            if conditions:
-                stmt = stmt.where(*conditions)
 
-        stmt = stmt.order_by(Transaction.id)
+        stmt = select(Transaction).where(*conditions).order_by(Transaction.id)
         return list(self.db.scalars(stmt))
 
     def update(self, transaction: Transaction) -> Transaction:
@@ -60,18 +67,18 @@ class TransactionRepository:
         self.db.commit()
 
     def sum_by_direction(
-        self, person_id: int | None = None
+        self, owner_id: int, person_id: int | None = None
     ) -> dict[Direction, Decimal]:
-        """Total amount per direction, computed in SQL (SUM ... GROUP BY).
-
-        Optionally scoped to a single person. Directions with no transactions
-        are simply absent from the result; callers default them to 0.
-        """
-        stmt = select(
-            Transaction.direction, func.sum(Transaction.amount)
-        ).group_by(Transaction.direction)
-
+        """Total amount per direction for one owner, computed in SQL
+        (SUM ... GROUP BY). Optionally scoped to a single person. Directions
+        with no transactions are absent; callers default them to 0."""
+        conditions = [Transaction.owner_id == owner_id]
         if person_id is not None:
-            stmt = stmt.where(Transaction.person_id == person_id)
+            conditions.append(Transaction.person_id == person_id)
 
+        stmt = (
+            select(Transaction.direction, func.sum(Transaction.amount))
+            .where(*conditions)
+            .group_by(Transaction.direction)
+        )
         return {direction: total for direction, total in self.db.execute(stmt)}

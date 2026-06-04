@@ -13,10 +13,10 @@ from app.schemas.transaction import (
 
 
 class TransactionService:
-    """Business logic for transactions.
+    """Business logic for transactions, scoped to the current user's owner_id.
 
     Beyond plain CRUD, it enforces referential integrity at the application
-    level: a transaction may only point at a person and event that exist.
+    level: a transaction may only point at a person and event the user owns.
     """
 
     def __init__(self, db: Session) -> None:
@@ -24,45 +24,49 @@ class TransactionService:
         self.persons = PersonRepository(db)
         self.events = EventRepository(db)
 
-    def create(self, data: TransactionCreate) -> Transaction:
-        self._ensure_person_exists(data.person_id)
-        self._ensure_event_exists(data.event_id)
-        transaction = Transaction(**data.model_dump())
+    def create(self, data: TransactionCreate, owner_id: int) -> Transaction:
+        self._ensure_person_exists(data.person_id, owner_id)
+        self._ensure_event_exists(data.event_id, owner_id)
+        transaction = Transaction(**data.model_dump(), owner_id=owner_id)
         return self.repo.create(transaction)
 
-    def list(self, filters: TransactionFilter | None = None) -> list[Transaction]:
-        return self.repo.list(filters)
+    def list(
+        self, owner_id: int, filters: TransactionFilter | None = None
+    ) -> list[Transaction]:
+        return self.repo.list(owner_id, filters)
 
-    def get(self, transaction_id: int) -> Transaction:
-        transaction = self.repo.get(transaction_id)
+    def get(self, transaction_id: int, owner_id: int) -> Transaction:
+        transaction = self.repo.get(transaction_id, owner_id)
         if transaction is None:
             raise self._not_found("Transaction", transaction_id)
         return transaction
 
-    def update(self, transaction_id: int, data: TransactionUpdate) -> Transaction:
-        transaction = self.get(transaction_id)  # reuse the 404 guard
+    def update(
+        self, transaction_id: int, data: TransactionUpdate, owner_id: int
+    ) -> Transaction:
+        transaction = self.get(transaction_id, owner_id)  # reuse the 404 guard
         changes = data.model_dump(exclude_unset=True)
 
         # Re-validate the FKs only when the client is changing them.
         if "person_id" in changes:
-            self._ensure_person_exists(changes["person_id"])
+            self._ensure_person_exists(changes["person_id"], owner_id)
         if "event_id" in changes:
-            self._ensure_event_exists(changes["event_id"])
+            self._ensure_event_exists(changes["event_id"], owner_id)
 
         for field, value in changes.items():
             setattr(transaction, field, value)
         return self.repo.update(transaction)
 
-    def delete(self, transaction_id: int) -> None:
-        transaction = self.get(transaction_id)  # reuse the 404 guard
+    def delete(self, transaction_id: int, owner_id: int) -> None:
+        transaction = self.get(transaction_id, owner_id)  # reuse the 404 guard
         self.repo.delete(transaction)
 
-    def _ensure_person_exists(self, person_id: int) -> None:
-        if self.persons.get(person_id) is None:
+    def _ensure_person_exists(self, person_id: int, owner_id: int) -> None:
+        if self.persons.get(person_id, owner_id) is None:
             raise self._not_found("Person", person_id)
 
-    def _ensure_event_exists(self, event_id: int) -> None:
-        if self.events.get(event_id) is None:
+    def _ensure_event_exists(self, event_id: int, owner_id: int) -> None:
+        if self.events.get(event_id, owner_id) is None:
             raise self._not_found("Event", event_id)
 
     @staticmethod

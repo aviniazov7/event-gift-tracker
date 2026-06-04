@@ -12,6 +12,18 @@ class Settings(BaseSettings):
     # dev server; in production this is injected from the environment.
     CORS_ALLOW_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # Google OAuth client id used to verify the Google ID token sent by the
+    # frontend's Sign-In button.
+    GOOGLE_CLIENT_ID: str = (
+        "557392690347-6vgsqh0b4cc6r7d6cbv1cgkehbrilamk.apps.googleusercontent.com"
+    )
+
+    # Secret + parameters for the app's own JWT (issued after Google verifies
+    # the user). JWT_SECRET must be provided via the environment.
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 43200  # 30 days
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property

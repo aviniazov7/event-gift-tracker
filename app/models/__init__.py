@@ -3,8 +3,10 @@
 from app.models.event import Event, EventType
 from app.models.person import Person, Relation
 from app.models.transaction import Direction, Transaction
+from app.models.user import User
 
 __all__ = [
+    "User",
     "Person",
     "Relation",
     "Event",

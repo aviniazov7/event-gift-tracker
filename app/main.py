@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.api import events, persons, stats, transactions
+from app.api import auth, events, persons, stats, transactions
 from app.core.config import settings
 from app.core.database import engine
 
@@ -19,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(persons.router)
 app.include_router(events.router)
 app.include_router(transactions.router)

@@ -34,6 +34,12 @@ services:
       # Comma-separated so local dev keeps working (the app splits on comma).
       - key: CORS_ALLOW_ORIGINS
         value: https://giftledger-web.onrender.com,http://localhost:5173
+      # Google OAuth client id (public) — used to verify Google Sign-In tokens.
+      - key: GOOGLE_CLIENT_ID
+        value: 557392690347-6vgsqh0b4cc6r7d6cbv1cgkehbrilamk.apps.googleusercontent.com
+      # Secret for signing the app's own JWTs — Render generates a strong value.
+      - key: JWT_SECRET
+        generateValue: true
       # NOTE: Render sets PORT automatically; the container reads ${PORT}.
 
   # ---- Vite + React frontend (static site) ----

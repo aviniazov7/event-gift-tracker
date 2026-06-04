@@ -1,9 +1,10 @@
 import os
 
-# The app builds its engine from DATABASE_URL at import time, so give it a
-# harmless value before importing anything from `app`. Tests never touch this
+# The app reads these from the environment at import time, so set harmless
+# values before importing anything from `app`. Tests never touch the real
 # engine — they override get_db with an isolated SQLite session below.
 os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,16 +14,20 @@ from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401  (registers every table on Base.metadata)
 from app.core.database import Base, get_db
+from app.core.deps import get_current_user
 from app.main import app
+from app.models.user import User
 
 
 @pytest.fixture
 def client():
-    """A TestClient backed by a fresh in-memory SQLite database per test.
+    """A TestClient backed by a fresh in-memory SQLite database per test, with
+    a signed-in test user.
 
     StaticPool keeps the single in-memory DB alive across connections so the
     schema persists for the whole test; tearing the engine down between tests
-    guarantees isolation.
+    guarantees isolation. Auth is stubbed by overriding get_current_user with
+    a real user row, so every request is scoped to that user's owner_id.
     """
     engine = create_engine(
         "sqlite://",
@@ -34,6 +39,16 @@ def client():
         bind=engine, autoflush=False, autocommit=False
     )
 
+    # Seed the authenticated user the overridden dependency will return.
+    seed = TestingSessionLocal()
+    test_user = User(
+        google_sub="test-sub", email="test@example.com", name="Test User"
+    )
+    seed.add(test_user)
+    seed.commit()
+    seed.refresh(test_user)
+    seed.close()
+
     def override_get_db():
         db = TestingSessionLocal()
         try:
@@ -42,6 +57,8 @@ def client():
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = lambda: test_user
+
     with TestClient(app) as test_client:
         yield test_client
 

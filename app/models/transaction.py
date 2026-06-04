@@ -28,6 +28,10 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # Every transaction belongs to the user who created it (per-user scoping).
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
     person_id: Mapped[int] = mapped_column(
         ForeignKey("persons.id"), nullable=False, index=True
     )
