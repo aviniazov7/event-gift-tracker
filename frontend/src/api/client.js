@@ -31,12 +31,77 @@ export function setUnauthorizedHandler(handler) {
   unauthorizedHandler = handler;
 }
 
-async function request(path, { skipAuthRedirect = false, ...options } = {}) {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Fire-and-forget nudge to wake the (free-tier, possibly sleeping) backend so it
+// boots while the user reads the login screen. Errors are intentionally ignored.
+export function prewarm() {
+  try {
+    fetch(`${API_BASE}/health`, { method: "GET", cache: "no-store" }).catch(
+      () => {},
+    );
+  } catch {
+    /* ignore — best-effort only */
+  }
+}
+
+// fetch with a hard per-attempt timeout, so a hung connection can't wait forever.
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Statuses Render returns while a sleeping service is waking — worth retrying.
+const COLD_START_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+// Retry a request through a cold start: on network errors, timeouts, or wakeup
+// statuses, back off and try again until `totalMs` elapses, then give up (so it
+// surfaces an error instead of hanging). Non-transient responses (200, 401, 4xx)
+// return immediately — bad credentials fail fast, not after a minute.
+async function fetchResilient(
+  url,
+  options,
+  { totalMs = 60000, attemptTimeoutMs = 12000 } = {},
+) {
+  const deadline = Date.now() + totalMs;
+  let delay = 1000;
+  let lastError = new Error("request failed");
+
+  for (;;) {
+    try {
+      const res = await fetchWithTimeout(url, options, attemptTimeoutMs);
+      if (!COLD_START_STATUSES.has(res.status)) return res;
+      lastError = new Error(`server waking (${res.status})`);
+    } catch (err) {
+      lastError = err; // network error or per-attempt timeout (AbortError)
+    }
+    if (Date.now() + delay >= deadline) break;
+    await sleep(delay);
+    delay = Math.min(Math.round(delay * 1.7), 8000); // capped exponential backoff
+  }
+  throw lastError;
+}
+
+async function request(
+  path,
+  { skipAuthRedirect = false, retry = false, ...options } = {},
+) {
   // Attach the bearer token to every request when we have one.
   const headers = { ...(options.headers ?? {}) };
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const url = `${API_BASE}${path}`;
+  const fetchOptions = { ...options, headers };
+  // `retry` is for the cold-start-sensitive calls (login + initial load); it
+  // never blocks indefinitely (bounded by fetchResilient's deadline).
+  const res = retry
+    ? await fetchResilient(url, fetchOptions)
+    : await fetch(url, fetchOptions);
 
   // A 401 means our token is missing or expired — log out everywhere. The
   // login call opts out (skipAuthRedirect) so a rejected sign-in surfaces its
@@ -73,15 +138,18 @@ function del(path) {
 // Exchange a Google ID token for an app JWT + user. Opts out of the 401
 // redirect so a bad credential shows its error on the login screen.
 export function loginWithGoogle(credential) {
+  // Retry through a cold start: the first call after the backend sleeps may hit
+  // a wakeup (502/timeout); without this, login hangs at "מתחבר…".
   return request("/auth/google", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ credential }),
     skipAuthRedirect: true,
+    retry: true,
   });
 }
 
-export function getTransactions(params = {}) {
+export function getTransactions(params = {}, opts = {}) {
   // Only include filters that actually have a value.
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -90,23 +158,23 @@ export function getTransactions(params = {}) {
     }
   }
   const qs = query.toString();
-  return request(`/transactions${qs ? `?${qs}` : ""}`);
+  return request(`/transactions${qs ? `?${qs}` : ""}`, opts);
 }
 
-export function getPersons() {
-  return request("/persons");
+export function getPersons(opts = {}) {
+  return request("/persons", opts);
 }
 
 export function getReciprocity(personId) {
   return request(`/persons/${personId}/reciprocity`);
 }
 
-export function getEvents() {
-  return request("/events");
+export function getEvents(opts = {}) {
+  return request("/events", opts);
 }
 
-export function getSummary() {
-  return request("/stats/summary");
+export function getSummary(opts = {}) {
+  return request("/stats/summary", opts);
 }
 
 export function getOverview() {

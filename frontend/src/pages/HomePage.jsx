@@ -22,11 +22,13 @@ export default function HomePage({ nav }) {
   const [deleting, setDeleting] = useState(false);
 
   async function load() {
+    // The first load right after sign-in can still race the backend's cold
+    // start, so these initial fetches retry through a wakeup too.
     const [evts, ppl, sum, txns] = await Promise.all([
-      getEvents(),
-      getPersons(),
-      getSummary(),
-      getTransactions(),
+      getEvents({ retry: true }),
+      getPersons({ retry: true }),
+      getSummary({ retry: true }),
+      getTransactions({}, { retry: true }),
     ]);
     setEvents(evts);
     setPersons(ppl);
