@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import Layout from "./components/Layout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import EventDetail from "./pages/EventDetail.jsx";
 import PersonDetail from "./pages/PersonDetail.jsx";
-import StatisticsPage from "./pages/StatisticsPage.jsx";
 import TransactionsPage from "./pages/TransactionsPage.jsx";
 import LoginScreen from "./pages/LoginScreen.jsx";
+import Spinner from "./components/Spinner.jsx";
 import { useAuth } from "./auth/AuthContext.jsx";
+
+// Code-split the statistics screen: it pulls in recharts (~370KB), which only
+// needs to load when the user actually opens סטטיסטיקות — keeping the initial
+// bundle (and cold-start first paint) lean.
+const StatisticsPage = lazy(() => import("./pages/StatisticsPage.jsx"));
+
+// Small themed fallback shown while a lazy route chunk downloads.
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted">
+      <Spinner />
+      טוען…
+    </div>
+  );
+}
 
 export default function App() {
   const { isAuthenticated } = useAuth();
@@ -44,7 +59,11 @@ export default function App() {
       {current.name === "person" && (
         <PersonDetail personId={current.personId} nav={nav} />
       )}
-      {current.name === "stats" && <StatisticsPage nav={nav} />}
+      {current.name === "stats" && (
+        <Suspense fallback={<RouteFallback />}>
+          <StatisticsPage nav={nav} />
+        </Suspense>
+      )}
       {current.name === "transactions" && <TransactionsPage nav={nav} />}
     </Layout>
   );
