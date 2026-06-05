@@ -116,3 +116,9 @@ export function createPerson(payload) {
 export function createEvent(payload) {
   return post("/events", payload);
 }
+
+// One-step gift logging: find-or-create the event + person and record the gift
+// in a single atomic request. Returns { transaction, event, person }.
+export function quickAdd(payload) {
+  return post("/quick-add", payload);
+}

@@ -23,6 +23,13 @@ class TransactionRepository:
         self.db.refresh(transaction)
         return transaction
 
+    def add(self, transaction: Transaction) -> Transaction:
+        """Stage an insert inside the caller's transaction (flush, NO commit) so
+        quick-add can commit the event, person and transaction in one shot."""
+        self.db.add(transaction)
+        self.db.flush()
+        return transaction
+
     def get(self, transaction_id: int, owner_id: int) -> Transaction | None:
         return self.db.scalar(
             select(Transaction).where(

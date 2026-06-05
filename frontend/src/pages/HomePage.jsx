@@ -1,27 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  createEvent,
   getEvents,
+  getPersons,
   getSummary,
   getTransactions,
+  quickAdd,
 } from "../api/client.js";
 import SummaryCards from "../components/SummaryCards.jsx";
-import EventQuickCreate from "../components/EventQuickCreate.jsx";
+import QuickAddForm from "../components/QuickAddForm.jsx";
 import EventCard from "../components/EventCard.jsx";
 
 export default function HomePage({ nav }) {
   const [events, setEvents] = useState([]);
+  const [persons, setPersons] = useState([]);
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
 
   async function load() {
-    const [evts, sum, txns] = await Promise.all([
+    const [evts, ppl, sum, txns] = await Promise.all([
       getEvents(),
+      getPersons(),
       getSummary(),
       getTransactions(),
     ]);
     setEvents(evts);
+    setPersons(ppl);
     setSummary(sum);
     setTransactions(txns);
   }
@@ -49,8 +53,10 @@ export default function HomePage({ nav }) {
     return result;
   }, [transactions]);
 
-  async function handleCreate(payload) {
-    await createEvent(payload);
+  // One submit logs the gift (find-or-create event + person) and refreshes the
+  // summary, events and per-event totals so the new data shows immediately.
+  async function handleQuickAdd(payload) {
+    await quickAdd(payload);
     await load();
   }
 
@@ -70,7 +76,11 @@ export default function HomePage({ nav }) {
     <div className="space-y-8">
       <SummaryCards summary={summary} />
 
-      <EventQuickCreate onCreate={handleCreate} />
+      <QuickAddForm
+        events={events}
+        persons={persons}
+        onSubmit={handleQuickAdd}
+      />
 
       <section className="space-y-5">
         <div className="flex items-baseline justify-between">

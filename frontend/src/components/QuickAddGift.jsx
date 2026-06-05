@@ -4,30 +4,33 @@ import { Field, fieldClasses } from "./FormField.jsx";
 import Select from "./Select.jsx";
 import PersonCombobox from "./PersonCombobox.jsx";
 
-// Quick-add a gift to the current event: pick/create a person, choose direction
-// and amount. The parent injects event_id + date and persists.
-export default function QuickAddGift({ persons, onCreatePerson, onAdd }) {
-  const [personId, setPersonId] = useState("");
-  const [direction, setDirection] = useState("given");
+// The in-event add-row: pick/create a person + amount and add a gift to THIS
+// event. Direction is owned by the parent so it stays "sticky" across entries
+// (and can default to קיבלתי for the user's own event) — adding many people in
+// a row becomes just name + amount each time.
+export default function QuickAddGift({
+  persons,
+  direction,
+  onDirectionChange,
+  onAdd,
+}) {
+  const [person, setPerson] = useState(null); // { id, name } | null
   const [amount, setAmount] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = personId && amount && !submitting;
+  const hasPerson = person && (person.id != null || person.name);
+  const canSubmit = hasPerson && amount && !submitting;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await onAdd({
-        person_id: Number(personId),
-        direction,
-        amount: Number(amount),
-      });
-      setPersonId("");
+      await onAdd({ person, amount: Number(amount) });
+      // Reset only person + amount; keep the (sticky) direction for the next.
+      setPerson(null);
       setAmount("");
-      setDirection("given");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -46,16 +49,15 @@ export default function QuickAddGift({ persons, onCreatePerson, onAdd }) {
         <Field label="אדם">
           <PersonCombobox
             persons={persons}
-            value={personId}
-            onChange={setPersonId}
-            onCreatePerson={onCreatePerson}
+            value={person}
+            onChange={setPerson}
           />
         </Field>
 
         <Field label="כיוון">
           <Select
             value={direction}
-            onChange={setDirection}
+            onChange={onDirectionChange}
             options={directionOptions.map(([value, label]) => ({
               value,
               label,

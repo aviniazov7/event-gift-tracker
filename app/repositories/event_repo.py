@@ -20,6 +20,17 @@ class EventRepository:
         self.db.refresh(event)
         return event
 
+    def add(self, event: Event) -> Event:
+        """Stage an insert inside the caller's transaction (flush, NO commit).
+
+        Used by multi-entity flows (e.g. quick-add) that must commit the event,
+        person and transaction together so a partial failure leaves nothing
+        behind. The flush assigns the primary key without ending the transaction.
+        """
+        self.db.add(event)
+        self.db.flush()
+        return event
+
     def get(self, event_id: int, owner_id: int) -> Event | None:
         return self.db.scalar(
             select(Event).where(Event.id == event_id, Event.owner_id == owner_id)

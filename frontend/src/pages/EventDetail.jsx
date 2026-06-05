@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  createPerson,
-  createTransaction,
   getEvents,
   getPersons,
   getTransactions,
+  quickAdd,
 } from "../api/client.js";
 import BackButton from "../components/BackButton.jsx";
 import QuickAddGift from "../components/QuickAddGift.jsx";
@@ -38,6 +37,9 @@ export default function EventDetail({ eventId, nav }) {
   const [event, setEvent] = useState(null);
   const [persons, setPersons] = useState([]);
   const [gifts, setGifts] = useState([]);
+  // Direction is held here so it stays sticky while adding several gifts in a
+  // row; it's seeded from the event (my event → received) once it loads.
+  const [direction, setDirection] = useState("given");
   const [status, setStatus] = useState("loading"); // loading | ready | error
 
   async function loadGifts() {
@@ -51,9 +53,12 @@ export default function EventDetail({ eventId, nav }) {
       getTransactions({ event_id: eventId }),
     ])
       .then(([evts, ppl, txns]) => {
-        setEvent(evts.find((e) => e.id === eventId) ?? null);
+        const current = evts.find((e) => e.id === eventId) ?? null;
+        setEvent(current);
         setPersons(ppl);
         setGifts(txns);
+        // For the user's own event, received gifts are the norm — default to it.
+        setDirection(current?.is_mine ? "received" : "given");
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
@@ -64,26 +69,20 @@ export default function EventDetail({ eventId, nav }) {
     return (id) => map.get(id) ?? `אדם #${id}`;
   }, [persons]);
 
-  // Create a person inline (from the combobox) and add to the local list.
-  async function handleCreatePerson(name) {
-    const person = await createPerson({
-      full_name: name,
-      relation: "other",
-      notes: null,
-    });
-    setPersons((prev) => [...prev, person]);
-    return person;
-  }
-
-  async function handleAdd({ person_id, direction, amount }) {
-    await createTransaction({
-      person_id,
-      event_id: eventId,
-      amount,
+  // Log a gift to this event in one call: /quick-add find-or-creates the person
+  // (by id when picked, by name when typed) and records the transaction. A
+  // newly created person is merged into the local list for the next entries.
+  async function handleAdd({ person, amount }) {
+    const res = await quickAdd({
+      event: { id: eventId },
+      person: person.id != null ? { id: person.id } : { name: person.name },
       direction,
+      amount,
       date: today(),
-      notes: null,
     });
+    setPersons((prev) =>
+      prev.some((p) => p.id === res.person.id) ? prev : [...prev, res.person],
+    );
     await loadGifts();
   }
 
@@ -121,7 +120,8 @@ export default function EventDetail({ eventId, nav }) {
 
         <QuickAddGift
           persons={persons}
-          onCreatePerson={handleCreatePerson}
+          direction={direction}
+          onDirectionChange={setDirection}
           onAdd={handleAdd}
         />
 

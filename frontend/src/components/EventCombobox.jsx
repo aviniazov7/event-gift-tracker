@@ -9,38 +9,34 @@ import { fieldClasses } from "./FormField.jsx";
 
 const CREATE = "__create__";
 
-// Person picker for the unified quick-add flow. Filters existing people as you
-// type and, when there's no exact match, offers to use the typed name as a NEW
-// person. Nothing is created here — the new name is just captured and the
-// single POST /quick-add does the find-or-create.
+// Event picker — the sibling of PersonCombobox. Filters existing events as you
+// type and, with no exact match, offers to use the typed name as a NEW event.
+// The new event isn't created here; the parent collects its type/is_mine and
+// the single POST /quick-add does the find-or-create.
 //
-// `value` is { id, name } | null (id is null for a not-yet-created person);
+// `value` is { id, name } | null (id is null for a not-yet-created event);
 // `onChange` receives the same { id, name } shape (or null when cleared).
-export default function PersonCombobox({ persons, value, onChange }) {
+export default function EventCombobox({ events, value, onChange }) {
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
   const filtered =
     q === ""
-      ? persons
-      : persons.filter((p) => p.full_name.toLowerCase().includes(q));
-  const exactMatch = persons.some(
-    (p) => p.full_name.trim().toLowerCase() === q,
-  );
+      ? events
+      : events.filter((e) => e.title.toLowerCase().includes(q));
+  const exactMatch = events.some((e) => e.title.trim().toLowerCase() === q);
   const canCreate = q !== "" && !exactMatch;
 
   function handleChange(val) {
     if (val === CREATE) {
       onChange({ id: null, name: query.trim() });
     } else {
-      const p = persons.find((x) => String(x.id) === String(val));
-      onChange(p ? { id: p.id, name: p.full_name } : null);
+      const e = events.find((x) => String(x.id) === String(val));
+      onChange(e ? { id: e.id, name: e.title } : null);
     }
     setQuery("");
   }
 
-  // Headless UI passes the Combobox `value` (a key string) to displayValue; we
-  // ignore it and render our object's name — the picked person or typed name.
   const selectedKey =
     value?.id != null ? String(value.id) : value?.name ? CREATE : "";
 
@@ -49,19 +45,19 @@ export default function PersonCombobox({ persons, value, onChange }) {
       <div className="relative">
         <ComboboxInput
           className={fieldClasses}
-          placeholder="בחר או הוסף אדם…"
+          placeholder="בחר או הוסף אירוע…"
           displayValue={() => value?.name ?? ""}
           onChange={(e) => setQuery(e.target.value)}
         />
 
         <ComboboxOptions className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-black/10 bg-card py-1 text-sm shadow-lg focus:outline-none dark:border-white/15">
-          {filtered.map((p) => (
+          {filtered.map((e) => (
             <ComboboxOption
-              key={p.id}
-              value={String(p.id)}
+              key={e.id}
+              value={String(e.id)}
               className="flex cursor-pointer items-center px-3 py-2 text-ink data-[focus]:bg-emerald-50 data-[focus]:text-emerald-700 dark:data-[focus]:bg-emerald-500/15 dark:data-[focus]:text-emerald-300"
             >
-              <span className="truncate">{p.full_name}</span>
+              <span className="truncate">{e.title}</span>
             </ComboboxOption>
           ))}
 

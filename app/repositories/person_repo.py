@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.person import Person
@@ -20,10 +20,30 @@ class PersonRepository:
         self.db.refresh(person)
         return person
 
+    def add(self, person: Person) -> Person:
+        """Stage an insert inside the caller's transaction (flush, NO commit).
+
+        Lets quick-add create a person and its transaction atomically; the flush
+        assigns the primary key without committing.
+        """
+        self.db.add(person)
+        self.db.flush()
+        return person
+
     def get(self, person_id: int, owner_id: int) -> Person | None:
         return self.db.scalar(
             select(Person).where(
                 Person.id == person_id, Person.owner_id == owner_id
+            )
+        )
+
+    def get_by_name(self, full_name: str, owner_id: int) -> Person | None:
+        """Find one of the owner's people by name, case-insensitively and
+        trimmed, so quick-add reuses an existing person instead of duplicating."""
+        return self.db.scalar(
+            select(Person).where(
+                Person.owner_id == owner_id,
+                func.lower(Person.full_name) == full_name.strip().lower(),
             )
         )
 
