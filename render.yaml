@@ -54,6 +54,9 @@ services:
       # so the value must be the full backend URL as a literal string.
       - key: VITE_API_BASE
         value: https://giftledger-api.onrender.com
+      # Google OAuth client id (public) — baked into the build for Sign-In.
+      - key: VITE_GOOGLE_CLIENT_ID
+        value: 557392690347-6vgsqh0b4cc6r7d6cbv1cgkehbrilamk.apps.googleusercontent.com
     routes:
       # SPA fallback so any path serves the app shell.
       - type: rewrite

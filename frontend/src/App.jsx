@@ -3,12 +3,20 @@ import Layout from "./components/Layout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import EventDetail from "./pages/EventDetail.jsx";
 import PersonDetail from "./pages/PersonDetail.jsx";
+import LoginScreen from "./pages/LoginScreen.jsx";
+import { useAuth } from "./auth/AuthContext.jsx";
 
 export default function App() {
+  const { isAuthenticated } = useAuth();
+
   // A simple view stack so "back" returns to the previous screen
   // (Home → Event → Person → back → Event → back → Home).
   const [stack, setStack] = useState([{ name: "home" }]);
   const current = stack[stack.length - 1];
+
+  // Gate the whole app behind Google Sign-In. A 401 from the API clears auth
+  // and brings the user right back here.
+  if (!isAuthenticated) return <LoginScreen />;
 
   const push = (view) => setStack((s) => [...s, view]);
 

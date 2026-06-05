@@ -1,8 +1,11 @@
-import { Gift } from "lucide-react";
+import { Gift, LogOut } from "lucide-react";
 import ThemeToggle from "./ThemeToggle.jsx";
 import ShareButton from "./ShareButton.jsx";
+import { useAuth } from "../auth/AuthContext.jsx";
 
 export default function Layout({ onHome, children }) {
+  const { user, logout } = useAuth();
+
   return (
     <div className="min-h-full">
       <header className="border-b border-black/5 bg-cream/80 backdrop-blur dark:border-white/10">
@@ -26,6 +29,26 @@ export default function Layout({ onHome, children }) {
           <div className="flex items-center gap-1">
             <ThemeToggle />
             <ShareButton />
+            {user && (
+              <>
+                {/* Show who's signed in; hidden on the narrowest screens. */}
+                <span
+                  className="hidden max-w-[9rem] truncate px-1 text-sm text-muted sm:block"
+                  title={user.email}
+                >
+                  {user.name || user.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={logout}
+                  aria-label="התנתקות"
+                  title="התנתקות"
+                  className="rounded-xl p-2 text-muted transition hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
+                >
+                  <LogOut className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
