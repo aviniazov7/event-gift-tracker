@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage.jsx";
 import EventDetail from "./pages/EventDetail.jsx";
 import PersonDetail from "./pages/PersonDetail.jsx";
 import StatisticsPage from "./pages/StatisticsPage.jsx";
+import TransactionsPage from "./pages/TransactionsPage.jsx";
 import LoginScreen from "./pages/LoginScreen.jsx";
 import { useAuth } from "./auth/AuthContext.jsx";
 
@@ -25,12 +26,17 @@ export default function App() {
     openEvent: (eventId) => push({ name: "event", eventId }),
     openPerson: (personId) => push({ name: "person", personId }),
     openStats: () => push({ name: "stats" }),
+    openTransactions: () => push({ name: "transactions" }),
     back: () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)),
     goHome: () => setStack([{ name: "home" }]),
   };
 
   return (
-    <Layout onHome={nav.goHome} onStats={nav.openStats}>
+    <Layout
+      onHome={nav.goHome}
+      onStats={nav.openStats}
+      onTransactions={nav.openTransactions}
+    >
       {current.name === "home" && <HomePage nav={nav} />}
       {current.name === "event" && (
         <EventDetail eventId={current.eventId} nav={nav} />
@@ -39,6 +45,7 @@ export default function App() {
         <PersonDetail personId={current.personId} nav={nav} />
       )}
       {current.name === "stats" && <StatisticsPage nav={nav} />}
+      {current.name === "transactions" && <TransactionsPage nav={nav} />}
     </Layout>
   );
 }

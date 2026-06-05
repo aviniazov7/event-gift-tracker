@@ -5,6 +5,7 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
+import { Plus } from "lucide-react";
 import { fieldClasses } from "./FormField.jsx";
 
 const CREATE = "__create__";
@@ -64,9 +65,10 @@ export default function EventCombobox({ events, value, onChange }) {
           {canCreate && (
             <ComboboxOption
               value={CREATE}
-              className="flex cursor-pointer items-center px-3 py-2 font-medium text-emerald-700 data-[focus]:bg-emerald-50 dark:text-emerald-300 dark:data-[focus]:bg-emerald-500/15"
+              className="flex cursor-pointer items-center gap-1.5 px-3 py-2 font-medium text-emerald-700 data-[focus]:bg-emerald-50 dark:text-emerald-300 dark:data-[focus]:bg-emerald-500/15"
             >
-              ➕ הוסף ‘{query.trim()}’
+              <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">הוסף ‘{query.trim()}’</span>
             </ComboboxOption>
           )}
 

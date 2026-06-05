@@ -222,3 +222,6 @@ __marimo__/
 
 # UI/UX Pro Max skill — local IDE-assistant tooling (uipro init), not app code
 .agent/
+
+# Claude Code local config
+.claude/
