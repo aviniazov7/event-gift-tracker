@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.event import Event
@@ -41,6 +41,12 @@ class EventRepository:
             self.db.scalars(
                 select(Event).where(Event.owner_id == owner_id).order_by(Event.id)
             )
+        )
+
+    def count(self, owner_id: int) -> int:
+        """How many events the owner has (computed in SQL)."""
+        return self.db.scalar(
+            select(func.count()).select_from(Event).where(Event.owner_id == owner_id)
         )
 
     def update(self, event: Event) -> Event:

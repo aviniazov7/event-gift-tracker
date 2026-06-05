@@ -3,6 +3,7 @@ import Layout from "./components/Layout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import EventDetail from "./pages/EventDetail.jsx";
 import PersonDetail from "./pages/PersonDetail.jsx";
+import StatisticsPage from "./pages/StatisticsPage.jsx";
 import LoginScreen from "./pages/LoginScreen.jsx";
 import { useAuth } from "./auth/AuthContext.jsx";
 
@@ -23,12 +24,13 @@ export default function App() {
   const nav = {
     openEvent: (eventId) => push({ name: "event", eventId }),
     openPerson: (personId) => push({ name: "person", personId }),
+    openStats: () => push({ name: "stats" }),
     back: () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s)),
     goHome: () => setStack([{ name: "home" }]),
   };
 
   return (
-    <Layout onHome={nav.goHome}>
+    <Layout onHome={nav.goHome} onStats={nav.openStats}>
       {current.name === "home" && <HomePage nav={nav} />}
       {current.name === "event" && (
         <EventDetail eventId={current.eventId} nav={nav} />
@@ -36,6 +38,7 @@ export default function App() {
       {current.name === "person" && (
         <PersonDetail personId={current.personId} nav={nav} />
       )}
+      {current.name === "stats" && <StatisticsPage nav={nav} />}
     </Layout>
   );
 }

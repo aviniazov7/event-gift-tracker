@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.stats import SummaryRead
+from app.schemas.stats import OverviewRead, SummaryRead
 from app.services.stats_service import StatsService
 
 router = APIRouter(prefix="/stats", tags=["stats"])
@@ -21,3 +21,11 @@ def get_summary(
     current_user: User = Depends(get_current_user),
 ) -> SummaryRead:
     return service.summary(current_user.id)
+
+
+@router.get("/overview", response_model=OverviewRead)
+def get_overview(
+    service: StatsService = Depends(get_service),
+    current_user: User = Depends(get_current_user),
+) -> OverviewRead:
+    return service.overview(current_user.id)

@@ -1,9 +1,9 @@
-import { Gift, LogOut } from "lucide-react";
+import { BarChart3, Gift, LogOut } from "lucide-react";
 import ThemeToggle from "./ThemeToggle.jsx";
 import ShareButton from "./ShareButton.jsx";
 import { useAuth } from "../auth/AuthContext.jsx";
 
-export default function Layout({ onHome, children }) {
+export default function Layout({ onHome, onStats, children }) {
   const { user, logout } = useAuth();
 
   return (
@@ -27,6 +27,17 @@ export default function Layout({ onHome, children }) {
           </button>
 
           <div className="flex items-center gap-1">
+            {onStats && (
+              <button
+                type="button"
+                onClick={onStats}
+                aria-label="סטטיסטיקות"
+                title="סטטיסטיקות"
+                className="rounded-xl p-2 text-muted transition hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
+              >
+                <BarChart3 className="h-5 w-5" aria-hidden="true" />
+              </button>
+            )}
             <ThemeToggle />
             <ShareButton />
             {user && (

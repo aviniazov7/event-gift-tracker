@@ -56,6 +56,14 @@ class PersonRepository:
             )
         )
 
+    def count(self, owner_id: int) -> int:
+        """How many people the owner has (computed in SQL)."""
+        return self.db.scalar(
+            select(func.count())
+            .select_from(Person)
+            .where(Person.owner_id == owner_id)
+        )
+
     def update(self, person: Person) -> Person:
         # `person` is already tracked by the session; commit flushes the changes.
         self.db.commit()

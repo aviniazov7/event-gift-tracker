@@ -105,6 +105,10 @@ export function getSummary() {
   return request("/stats/summary");
 }
 
+export function getOverview() {
+  return request("/stats/overview");
+}
+
 export function createTransaction(payload) {
   return post("/transactions", payload);
 }

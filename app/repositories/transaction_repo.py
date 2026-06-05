@@ -1,8 +1,15 @@
+# Deferred annotations: this class defines a method named `list`, which would
+# otherwise shadow the builtin `list` when later return annotations (list[Row])
+# are evaluated in the class body.
+from __future__ import annotations
+
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import Row, case, func, select
 from sqlalchemy.orm import Session
 
+from app.models.event import Event
+from app.models.person import Person
 from app.models.transaction import Direction, Transaction
 from app.schemas.transaction import TransactionFilter
 
@@ -89,3 +96,99 @@ class TransactionRepository:
             .group_by(Transaction.direction)
         )
         return {direction: total for direction, total in self.db.execute(stmt)}
+
+    def count(self, owner_id: int) -> int:
+        """How many gifts (transactions) the owner has."""
+        return self.db.scalar(
+            select(func.count())
+            .select_from(Transaction)
+            .where(Transaction.owner_id == owner_id)
+        )
+
+    def avg_by_direction(self, owner_id: int) -> dict[Direction, Decimal]:
+        """Average gift amount per direction, computed in SQL. Directions with
+        no gifts are absent; callers default them to 0."""
+        stmt = (
+            select(Transaction.direction, func.avg(Transaction.amount))
+            .where(Transaction.owner_id == owner_id)
+            .group_by(Transaction.direction)
+        )
+        return {direction: avg for direction, avg in self.db.execute(stmt)}
+
+    def biggest_gift(self, owner_id: int) -> Row | None:
+        """The single largest gift (either direction) as a row of
+        (amount, person_name, event_title), or None when there are no gifts."""
+        stmt = (
+            select(
+                Transaction.amount,
+                Person.full_name.label("person_name"),
+                Event.title.label("event_title"),
+            )
+            .join(Person, Person.id == Transaction.person_id)
+            .join(Event, Event.id == Transaction.event_id)
+            .where(Transaction.owner_id == owner_id)
+            .order_by(Transaction.amount.desc(), Transaction.id)
+            .limit(1)
+        )
+        return self.db.execute(stmt).first()
+
+    def sum_by_event_type(self, owner_id: int) -> list[Row]:
+        """Per event-type given/received totals, as rows of
+        (type, given, received). Computed with a single grouped query."""
+        given = func.coalesce(
+            func.sum(
+                case(
+                    (Transaction.direction == Direction.given, Transaction.amount),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("given")
+        received = func.coalesce(
+            func.sum(
+                case(
+                    (Transaction.direction == Direction.received, Transaction.amount),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("received")
+        stmt = (
+            select(Event.type, given, received)
+            .join(Event, Event.id == Transaction.event_id)
+            .where(Transaction.owner_id == owner_id)
+            .group_by(Event.type)
+            .order_by(Event.type)
+        )
+        return list(self.db.execute(stmt))
+
+    def top_people(self, owner_id: int, limit: int = 5) -> list[Row]:
+        """The top people by total money exchanged (given + received), as rows
+        of (person_name, given, received), highest first."""
+        given = func.coalesce(
+            func.sum(
+                case(
+                    (Transaction.direction == Direction.given, Transaction.amount),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("given")
+        received = func.coalesce(
+            func.sum(
+                case(
+                    (Transaction.direction == Direction.received, Transaction.amount),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("received")
+        stmt = (
+            select(Person.full_name.label("person_name"), given, received)
+            .join(Person, Person.id == Transaction.person_id)
+            .where(Transaction.owner_id == owner_id)
+            .group_by(Person.id, Person.full_name)
+            .order_by((given + received).desc(), Person.id)
+            .limit(limit)
+        )
+        return list(self.db.execute(stmt))
