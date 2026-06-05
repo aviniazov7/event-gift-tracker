@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { directionOptions } from "../utils/labels.js";
-import { Field, fieldClasses } from "./FormField.jsx";
+import { Field } from "./FormField.jsx";
 import Select from "./Select.jsx";
 import PersonCombobox from "./PersonCombobox.jsx";
 import Spinner from "./Spinner.jsx";
+import NumberStepper from "./NumberStepper.jsx";
 
 // The in-event add-row: pick/create a person + amount and add a gift to THIS
 // event. Direction is owned by the parent so it stays "sticky" across entries
@@ -67,16 +68,7 @@ export default function QuickAddGift({
         </Field>
 
         <Field label="סכום">
-          <input
-            className={fieldClasses}
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-          />
+          <NumberStepper value={amount} onChange={setAmount} />
         </Field>
       </div>
 

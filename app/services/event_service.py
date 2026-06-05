@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.event import Event
 from app.repositories.event_repo import EventRepository
+from app.repositories.transaction_repo import TransactionRepository
 from app.schemas.event import EventCreate, EventUpdate
 
 
@@ -11,6 +12,7 @@ class EventService:
 
     def __init__(self, db: Session) -> None:
         self.repo = EventRepository(db)
+        self.transactions = TransactionRepository(db)
 
     def create(self, data: EventCreate, owner_id: int) -> Event:
         event = Event(**data.model_dump(), owner_id=owner_id)
@@ -34,6 +36,9 @@ class EventService:
 
     def delete(self, event_id: int, owner_id: int) -> None:
         event = self.get(event_id, owner_id)  # reuse the 404 guard
+        # Cascade: an event's gifts go with it. Both run in one transaction
+        # (the bulk delete doesn't commit; repo.delete does).
+        self.transactions.delete_by_event(event_id, owner_id)
         self.repo.delete(event)
 
     @staticmethod

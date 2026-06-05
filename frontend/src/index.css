@@ -24,6 +24,12 @@
   --color-muted: #6f6757; /* secondary text — AA (≥4.5:1) on card and page */
 
   --color-night: #17150f; /* darkest surface, used by dark: variants (inputs) */
+
+  /* Motion tokens — ease-out for entering, short durations (≤300ms micro,
+     ≤400ms for content/charts). Used by the entrance keyframes below. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur: 220ms;
 }
 
 /* In dark mode retint the neutral tokens, so every bg-cream / bg-card /
@@ -104,6 +110,54 @@ html.dark .rdp-root {
   border: 1px solid var(--rdp-accent-color);
   color: #fff;
   font-weight: 600;
+}
+
+/* ---- Depth + entrance motion (within the brand) ---- */
+
+/* Softer, layered elevation — a tight contact shadow plus a wide soft one.
+   Tuned per theme so cards read as "lifted" without looking heavy. */
+.shadow-soft {
+  box-shadow:
+    0 1px 2px rgb(43 39 34 / 0.05),
+    0 10px 30px -18px rgb(43 39 34 / 0.25);
+}
+html.dark .shadow-soft {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.5),
+    0 16px 36px -20px rgb(0 0 0 / 0.7);
+}
+
+@keyframes gl-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes gl-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Screen-mount entrance: a 220ms fade + small rise. */
+.animate-page {
+  animation: gl-fade-up var(--dur) var(--ease-out) both;
+}
+
+/* List-row / card entrance; callers set --row-delay inline for a stagger. */
+.animate-row {
+  animation: gl-row-in 260ms var(--ease-out) both;
+  animation-delay: var(--row-delay, 0ms);
 }
 
 /* Respect users who ask for less motion: neutralise transitions/animations so

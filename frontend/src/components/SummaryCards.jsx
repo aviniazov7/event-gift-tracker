@@ -1,44 +1,59 @@
-import { formatMoney } from "../utils/money.js";
+import AnimatedMoney from "./AnimatedMoney.jsx";
 
-function StatCard({ label, value, tone }) {
-  const tones = {
-    given: "text-emerald-600 dark:text-emerald-400",
-    received: "text-amber-600 dark:text-amber-400",
-    netPositive: "text-emerald-600 dark:text-emerald-400",
-    netNegative: "text-rose-600 dark:text-rose-400",
-  };
+const toneText = {
+  given: "text-emerald-600 dark:text-emerald-400",
+  received: "text-amber-600 dark:text-amber-400",
+  netPositive: "text-emerald-600 dark:text-emerald-400",
+  netNegative: "text-rose-600 dark:text-rose-400",
+};
+
+// A subtle gradient wash in the card's corner, tinted to the figure's meaning.
+const toneAccent = {
+  given: "from-emerald-500/10",
+  received: "from-amber-500/10",
+  netPositive: "from-emerald-500/12",
+  netNegative: "from-rose-500/12",
+};
+
+function Card({ label, value, tone, big = false }) {
   return (
-    <div className="rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
-      <p className="text-xs font-medium text-muted">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${tones[tone]}`}>
-        {value}
-      </p>
+    <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10">
+      {/* Brand-tinted depth accent — soft, never loud. */}
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-bl to-transparent ${toneAccent[tone]}`}
+        aria-hidden="true"
+      />
+      <div className="relative">
+        <p className="text-xs font-medium text-muted">{label}</p>
+        <AnimatedMoney
+          value={value}
+          className={`mt-1 block font-semibold ${
+            big ? "text-3xl" : "text-2xl"
+          } ${toneText[tone]}`}
+        />
+      </div>
     </div>
   );
 }
 
-// Overall given/received/net across all events (from GET /stats/summary).
+// Overall given/received/net (from GET /stats/summary). The balance leads —
+// full width and larger — with given/received beneath it.
 export default function SummaryCards({ summary }) {
   if (!summary) return null;
 
   const net = Number(summary.net);
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <StatCard
-        label="סך נתתי"
-        value={formatMoney(summary.total_given)}
-        tone="given"
-      />
-      <StatCard
-        label="סך קיבלתי"
-        value={formatMoney(summary.total_received)}
-        tone="received"
-      />
-      <StatCard
+    <div className="space-y-3">
+      <Card
         label="מאזן"
-        value={formatMoney(summary.net)}
+        value={summary.net}
         tone={net >= 0 ? "netPositive" : "netNegative"}
+        big
       />
+      <div className="grid grid-cols-2 gap-3">
+        <Card label="סך נתתי" value={summary.total_given} tone="given" />
+        <Card label="סך קיבלתי" value={summary.total_received} tone="received" />
+      </div>
     </div>
   );
 }

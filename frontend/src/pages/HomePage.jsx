@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  deleteEvent,
   getEvents,
   getPersons,
   getSummary,
@@ -9,6 +10,7 @@ import {
 import SummaryCards from "../components/SummaryCards.jsx";
 import QuickAddForm from "../components/QuickAddForm.jsx";
 import EventCard from "../components/EventCard.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 
 export default function HomePage({ nav }) {
   const [events, setEvents] = useState([]);
@@ -16,6 +18,8 @@ export default function HomePage({ nav }) {
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [pendingEvent, setPendingEvent] = useState(null); // event awaiting delete confirm
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     const [evts, ppl, sum, txns] = await Promise.all([
@@ -60,6 +64,18 @@ export default function HomePage({ nav }) {
     await load();
   }
 
+  // Delete the event (cascades to its gifts server-side), then refresh.
+  async function confirmDeleteEvent() {
+    setDeleting(true);
+    try {
+      await deleteEvent(pendingEvent.id);
+      await load();
+      setPendingEvent(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (status === "loading") {
     return <p className="text-sm text-muted">טוען…</p>;
   }
@@ -73,7 +89,7 @@ export default function HomePage({ nav }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="animate-page space-y-8">
       <SummaryCards summary={summary} />
 
       <QuickAddForm
@@ -94,17 +110,29 @@ export default function HomePage({ nav }) {
           </div>
         ) : (
           <ul className="space-y-3">
-            {events.map((ev) => (
+            {events.map((ev, i) => (
               <EventCard
                 key={ev.id}
                 event={ev}
                 stats={statsByEvent.get(ev.id)}
+                index={i}
                 onOpen={nav.openEvent}
+                onDelete={setPendingEvent}
               />
             ))}
           </ul>
         )}
       </section>
+
+      <ConfirmDialog
+        open={Boolean(pendingEvent)}
+        title={pendingEvent ? `למחוק את "${pendingEvent.title}"?` : ""}
+        message="כל המתנות באירוע יימחקו. הפעולה אינה הפיכה."
+        confirmLabel="מחק אירוע"
+        busy={deleting}
+        onConfirm={confirmDeleteEvent}
+        onCancel={() => setPendingEvent(null)}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  deleteTransaction,
   getEvents,
   getPersons,
   getTransactions,
@@ -8,14 +9,20 @@ import {
 import BackButton from "../components/BackButton.jsx";
 import QuickAddGift from "../components/QuickAddGift.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
+import DeleteButton from "../components/DeleteButton.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { eventTypeLabels } from "../utils/labels.js";
 import { formatMoney } from "../utils/money.js";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-function GiftRow({ gift, personName, onOpenPerson }) {
+function GiftRow({ gift, personName, index, onOpenPerson, onDelete }) {
+  const given = gift.direction === "given";
   return (
-    <li className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
+    <li
+      className="animate-row flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+      style={{ "--row-delay": `${Math.min(index, 8) * 40}ms` }}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <DirectionBadge direction={gift.direction} />
         <button
@@ -26,9 +33,18 @@ function GiftRow({ gift, personName, onOpenPerson }) {
           {personName}
         </button>
       </div>
-      <span className="shrink-0 text-base font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-        {formatMoney(gift.amount)}
-      </span>
+      <div className="flex shrink-0 items-center gap-1">
+        <span
+          className={`text-base font-semibold tabular-nums ${
+            given
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-amber-600 dark:text-amber-400"
+          }`}
+        >
+          {formatMoney(gift.amount)}
+        </span>
+        <DeleteButton label="מחיקת המתנה" onClick={() => onDelete(gift)} />
+      </div>
     </li>
   );
 }
@@ -41,6 +57,8 @@ export default function EventDetail({ eventId, nav }) {
   // row; it's seeded from the event (my event → received) once it loads.
   const [direction, setDirection] = useState("given");
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [pendingGift, setPendingGift] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadGifts() {
     setGifts(await getTransactions({ event_id: eventId }));
@@ -86,6 +104,17 @@ export default function EventDetail({ eventId, nav }) {
     await loadGifts();
   }
 
+  async function confirmDeleteGift() {
+    setDeleting(true);
+    try {
+      await deleteTransaction(pendingGift.id);
+      await loadGifts();
+      setPendingGift(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (status === "loading") {
     return <p className="text-sm text-muted">טוען…</p>;
   }
@@ -102,7 +131,7 @@ export default function EventDetail({ eventId, nav }) {
   }
 
   return (
-    <div>
+    <div className="animate-page">
       <BackButton onClick={nav.back} />
 
       <div className="space-y-8">
@@ -137,18 +166,30 @@ export default function EventDetail({ eventId, nav }) {
             </div>
           ) : (
             <ul className="space-y-3">
-              {gifts.map((gift) => (
+              {gifts.map((gift, i) => (
                 <GiftRow
                   key={gift.id}
                   gift={gift}
                   personName={personName(gift.person_id)}
+                  index={i}
                   onOpenPerson={nav.openPerson}
+                  onDelete={setPendingGift}
                 />
               ))}
             </ul>
           )}
         </section>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingGift)}
+        title="למחוק את המתנה?"
+        message="המתנה תוסר לצמיתות."
+        confirmLabel="מחק מתנה"
+        busy={deleting}
+        onConfirm={confirmDeleteGift}
+        onCancel={() => setPendingGift(null)}
+      />
     </div>
   );
 }

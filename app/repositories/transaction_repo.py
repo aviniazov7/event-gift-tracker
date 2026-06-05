@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import Row, case, func, select
+from sqlalchemy import Row, case, delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.event import Event
@@ -79,6 +79,26 @@ class TransactionRepository:
     def delete(self, transaction: Transaction) -> None:
         self.db.delete(transaction)
         self.db.commit()
+
+    def delete_by_event(self, event_id: int, owner_id: int) -> None:
+        """Remove all of the owner's gifts for one event (no commit) — lets the
+        event delete cascade atomically in the caller's transaction."""
+        self.db.execute(
+            delete(Transaction).where(
+                Transaction.event_id == event_id,
+                Transaction.owner_id == owner_id,
+            )
+        )
+
+    def delete_by_person(self, person_id: int, owner_id: int) -> None:
+        """Remove all of the owner's gifts for one person (no commit) — lets the
+        person delete cascade atomically in the caller's transaction."""
+        self.db.execute(
+            delete(Transaction).where(
+                Transaction.person_id == person_id,
+                Transaction.owner_id == owner_id,
+            )
+        )
 
     def sum_by_direction(
         self, owner_id: int, person_id: int | None = None

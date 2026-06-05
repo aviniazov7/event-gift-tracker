@@ -66,6 +66,10 @@ function post(path, payload) {
   });
 }
 
+function del(path) {
+  return request(path, { method: "DELETE" });
+}
+
 // Exchange a Google ID token for an app JWT + user. Opts out of the 401
 // redirect so a bad credential shows its error on the login screen.
 export function loginWithGoogle(credential) {
@@ -125,4 +129,18 @@ export function createEvent(payload) {
 // in a single atomic request. Returns { transaction, event, person }.
 export function quickAdd(payload) {
   return post("/quick-add", payload);
+}
+
+// Deletes are scoped to the current user server-side. Deleting an event or
+// person cascades to its gifts.
+export function deleteTransaction(id) {
+  return del(`/transactions/${id}`);
+}
+
+export function deleteEvent(id) {
+  return del(`/events/${id}`);
+}
+
+export function deletePerson(id) {
+  return del(`/persons/${id}`);
 }

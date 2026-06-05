@@ -7,6 +7,7 @@ import {
 } from "../api/client.js";
 import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
+import AnimatedMoney from "../components/AnimatedMoney.jsx";
 import { formatMoney } from "../utils/money.js";
 
 // Tabs map to the transactions endpoint's `direction` filter ("all" = no filter).
@@ -16,10 +17,13 @@ const TABS = [
   { key: "received", label: "קיבלתי" },
 ];
 
-function TransactionRow({ tx, personName, eventName, nav }) {
+function TransactionRow({ tx, personName, eventName, index, nav }) {
   const given = tx.direction === "given";
   return (
-    <li className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
+    <li
+      className="animate-row flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+      style={{ "--row-delay": `${Math.min(index, 10) * 35}ms` }}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <DirectionBadge direction={tx.direction} />
         <div className="min-w-0">
@@ -142,7 +146,7 @@ export default function TransactionsPage({ nav }) {
   const active = totals[tab];
 
   return (
-    <div>
+    <div className="animate-page">
       <BackButton onClick={nav.back} />
 
       <div className="space-y-6">
@@ -154,11 +158,10 @@ export default function TransactionsPage({ nav }) {
         <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10">
           <div className="text-center">
             <p className="text-xs font-medium text-muted">{active.label}</p>
-            <p
-              className={`mt-1 text-3xl font-semibold tabular-nums ${active.tone}`}
-            >
-              {formatMoney(active.value)}
-            </p>
+            <AnimatedMoney
+              value={active.value}
+              className={`mt-1 block text-3xl font-semibold ${active.tone}`}
+            />
           </div>
 
           <div
@@ -201,12 +204,13 @@ export default function TransactionsPage({ nav }) {
             </div>
           ) : (
             <ul className="space-y-3">
-              {txns.map((tx) => (
+              {txns.map((tx, i) => (
                 <TransactionRow
                   key={tx.id}
                   tx={tx}
                   personName={personName(tx.person_id)}
                   eventName={eventName(tx.event_id)}
+                  index={i}
                   nav={nav}
                 />
               ))}

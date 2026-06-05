@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  deletePerson,
+  deleteTransaction,
   getEvents,
   getPersons,
   getReciprocity,
@@ -7,6 +9,8 @@ import {
 } from "../api/client.js";
 import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
+import DeleteButton from "../components/DeleteButton.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { formatMoney } from "../utils/money.js";
 
 function ReciprocitySummary({ reciprocity }) {
@@ -47,6 +51,18 @@ export default function PersonDetail({ personId, nav }) {
   const [gifts, setGifts] = useState([]);
   const [events, setEvents] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [pendingGift, setPendingGift] = useState(null);
+  const [askDeletePerson, setAskDeletePerson] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function reload() {
+    const [recip, txns] = await Promise.all([
+      getReciprocity(personId),
+      getTransactions({ person_id: personId }),
+    ]);
+    setReciprocity(recip);
+    setGifts(txns);
+  }
 
   useEffect(() => {
     Promise.all([
@@ -70,6 +86,29 @@ export default function PersonDetail({ personId, nav }) {
     return (id) => map.get(id) ?? `אירוע #${id}`;
   }, [events]);
 
+  async function confirmDeleteGift() {
+    setDeleting(true);
+    try {
+      await deleteTransaction(pendingGift.id);
+      await reload();
+      setPendingGift(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  // Deleting the person cascades to their gifts; return to the previous screen.
+  async function confirmDeletePerson() {
+    setDeleting(true);
+    try {
+      await deletePerson(personId);
+      setAskDeletePerson(false);
+      nav.back();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (status === "loading") {
     return <p className="text-sm text-muted">טוען…</p>;
   }
@@ -86,14 +125,18 @@ export default function PersonDetail({ personId, nav }) {
   }
 
   return (
-    <div>
+    <div className="animate-page">
       <BackButton onClick={nav.back} />
 
       <div className="space-y-8">
-        <header>
-          <h2 className="text-2xl font-semibold tracking-tight">
+        <header className="flex items-center justify-between gap-3">
+          <h2 className="min-w-0 truncate text-2xl font-semibold tracking-tight">
             {person.full_name}
           </h2>
+          <DeleteButton
+            label="מחיקת האדם"
+            onClick={() => setAskDeletePerson(true)}
+          />
         </header>
 
         <ReciprocitySummary reciprocity={reciprocity} />
@@ -110,30 +153,66 @@ export default function PersonDetail({ personId, nav }) {
             </div>
           ) : (
             <ul className="space-y-3">
-              {gifts.map((gift) => (
-                <li
-                  key={gift.id}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <DirectionBadge direction={gift.direction} />
-                    <button
-                      type="button"
-                      onClick={() => nav.openEvent(gift.event_id)}
-                      className="focus-ring cursor-pointer truncate rounded-md text-sm font-medium text-ink hover:underline"
-                    >
-                      {eventName(gift.event_id)}
-                    </button>
-                  </div>
-                  <span className="shrink-0 text-base font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                    {formatMoney(gift.amount)}
-                  </span>
-                </li>
-              ))}
+              {gifts.map((gift, i) => {
+                const given = gift.direction === "given";
+                return (
+                  <li
+                    key={gift.id}
+                    className="animate-row flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+                    style={{ "--row-delay": `${Math.min(i, 8) * 40}ms` }}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <DirectionBadge direction={gift.direction} />
+                      <button
+                        type="button"
+                        onClick={() => nav.openEvent(gift.event_id)}
+                        className="focus-ring cursor-pointer truncate rounded-md text-sm font-medium text-ink hover:underline"
+                      >
+                        {eventName(gift.event_id)}
+                      </button>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span
+                        className={`text-base font-semibold tabular-nums ${
+                          given
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        {formatMoney(gift.amount)}
+                      </span>
+                      <DeleteButton
+                        label="מחיקת המתנה"
+                        onClick={() => setPendingGift(gift)}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingGift)}
+        title="למחוק את המתנה?"
+        message="המתנה תוסר לצמיתות."
+        confirmLabel="מחק מתנה"
+        busy={deleting}
+        onConfirm={confirmDeleteGift}
+        onCancel={() => setPendingGift(null)}
+      />
+
+      <ConfirmDialog
+        open={askDeletePerson}
+        title={`למחוק את ${person.full_name}?`}
+        message="כל המתנות שלו יימחקו. הפעולה אינה הפיכה."
+        confirmLabel="מחק אדם"
+        busy={deleting}
+        onConfirm={confirmDeletePerson}
+        onCancel={() => setAskDeletePerson(false)}
+      />
     </div>
   );
 }

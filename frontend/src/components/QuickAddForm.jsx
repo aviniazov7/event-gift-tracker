@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { directionOptions, eventTypeOptions } from "../utils/labels.js";
-import { Field, fieldClasses } from "./FormField.jsx";
+import { Field } from "./FormField.jsx";
 import Select from "./Select.jsx";
 import DatePicker from "./DatePicker.jsx";
 import EventCombobox from "./EventCombobox.jsx";
 import PersonCombobox from "./PersonCombobox.jsx";
 import Toggle from "./Toggle.jsx";
 import Spinner from "./Spinner.jsx";
+import NumberStepper from "./NumberStepper.jsx";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -132,15 +133,9 @@ export default function QuickAddForm({ events, persons, onSubmit }) {
         </Field>
 
         <Field label="סכום">
-          <input
-            className={fieldClasses}
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
+          <NumberStepper
             value={form.amount}
-            onChange={(e) => set({ amount: e.target.value })}
-            required
+            onChange={(v) => set({ amount: v })}
           />
         </Field>
 

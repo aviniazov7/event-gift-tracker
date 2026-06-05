@@ -12,7 +12,10 @@ import {
 } from "recharts";
 import { getOverview } from "../api/client.js";
 import BackButton from "../components/BackButton.jsx";
+import AnimatedMoney from "../components/AnimatedMoney.jsx";
 import { useTheme } from "../hooks/useTheme.js";
+import { useReducedMotion } from "../hooks/useReducedMotion.js";
+import { useCountUp } from "../hooks/useCountUp.js";
 import { eventTypeLabels } from "../utils/labels.js";
 import { formatMoney } from "../utils/money.js";
 
@@ -77,20 +80,42 @@ function ChartCard({ title, height = 260, children }) {
   );
 }
 
-function StatCard({ label, value, tone = "ink" }) {
-  const tones = {
-    given: "text-emerald-600 dark:text-emerald-400",
-    received: "text-amber-600 dark:text-amber-400",
-    netPositive: "text-emerald-600 dark:text-emerald-400",
-    netNegative: "text-rose-600 dark:text-rose-400",
-    ink: "text-ink",
-  };
+const STAT_TONE = {
+  given: "text-emerald-600 dark:text-emerald-400",
+  received: "text-amber-600 dark:text-amber-400",
+  netPositive: "text-emerald-600 dark:text-emerald-400",
+  netNegative: "text-rose-600 dark:text-rose-400",
+  ink: "text-ink",
+};
+
+const STAT_ACCENT = {
+  given: "from-emerald-500/10",
+  received: "from-amber-500/10",
+  netPositive: "from-emerald-500/12",
+  netNegative: "from-rose-500/12",
+  ink: "from-emerald-500/8",
+};
+
+// A stat card whose figure counts up on mount. `format` picks money vs a plain
+// integer (event/person counts). Layered shadow + a soft brand-tinted accent.
+function StatCard({ label, value, tone = "ink", format = "money" }) {
+  const animated = useCountUp(value);
+  const display =
+    format === "int"
+      ? Math.round(animated).toLocaleString("he-IL")
+      : formatMoney(animated);
   return (
-    <div className="rounded-2xl border border-black/5 bg-card px-4 py-3 shadow-sm dark:border-white/10">
-      <p className="text-xs font-medium text-muted">{label}</p>
-      <p className={`mt-1 text-xl font-semibold tabular-nums ${tones[tone]}`}>
-        {value}
-      </p>
+    <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-card px-4 py-3 shadow-soft dark:border-white/10">
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-bl to-transparent ${STAT_ACCENT[tone]}`}
+        aria-hidden="true"
+      />
+      <div className="relative">
+        <p className="text-xs font-medium text-muted">{label}</p>
+        <p className={`mt-1 text-xl font-semibold tabular-nums ${STAT_TONE[tone]}`}>
+          {display}
+        </p>
+      </div>
     </div>
   );
 }
@@ -101,6 +126,9 @@ export default function StatisticsPage({ nav }) {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const palette = usePalette();
+  const reduced = useReducedMotion();
+  // Chart entrance: a short grow, disabled under reduced-motion.
+  const chartAnim = { isAnimationActive: !reduced, animationDuration: 400 };
 
   useEffect(() => {
     getOverview()
@@ -156,7 +184,7 @@ export default function StatisticsPage({ nav }) {
   );
 
   return (
-    <div>
+    <div className="animate-page">
       <BackButton onClick={nav.back} />
 
       <div className="space-y-8">
@@ -166,27 +194,28 @@ export default function StatisticsPage({ nav }) {
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard label="סך נתתי" value={formatMoney(data.total_given)} tone="given" />
-          <StatCard label="סך קיבלתי" value={formatMoney(data.total_received)} tone="received" />
+          <StatCard label="סך נתתי" value={Number(data.total_given)} tone="given" />
+          <StatCard label="סך קיבלתי" value={Number(data.total_received)} tone="received" />
           <StatCard
             label="מאזן"
-            value={formatMoney(data.net)}
+            value={Number(data.net)}
             tone={net >= 0 ? "netPositive" : "netNegative"}
           />
-          <StatCard label="מספר אירועים" value={data.event_count} />
-          <StatCard label="מספר אנשים" value={data.person_count} />
-          <StatCard label="מתנה ממוצעת" value={formatMoney(data.avg_given)} tone="given" />
+          <StatCard label="מספר אירועים" value={data.event_count} format="int" />
+          <StatCard label="מספר אנשים" value={data.person_count} format="int" />
+          <StatCard label="מתנה ממוצעת" value={Number(data.avg_given)} tone="given" />
         </div>
 
         {/* Biggest gift highlight */}
         {data.biggest_gift && (
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+          <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 shadow-soft dark:border-emerald-500/25 dark:bg-emerald-500/10">
             <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
               המתנה הגדולה ביותר
             </p>
-            <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-200">
-              {formatMoney(data.biggest_gift.amount)}
-            </p>
+            <AnimatedMoney
+              value={data.biggest_gift.amount}
+              className="mt-1 block text-lg font-semibold text-emerald-700 dark:text-emerald-200"
+            />
             <p className="text-sm text-muted">
               {data.biggest_gift.person_name} · {data.biggest_gift.event_title}
             </p>
@@ -219,7 +248,7 @@ export default function StatisticsPage({ nav }) {
                   width={48}
                 />
                 {tooltip}
-                <Bar dataKey="value" name="סכום" radius={[6, 6, 0, 0]} maxBarSize={72}>
+                <Bar dataKey="value" name="סכום" radius={[6, 6, 0, 0]} maxBarSize={72} {...chartAnim}>
                   {giveVsReceive.map((d) => (
                     <Cell key={d.key} fill={d.key === "given" ? palette.given : palette.received} />
                   ))}
@@ -249,8 +278,8 @@ export default function StatisticsPage({ nav }) {
                 />
                 {tooltip}
                 {legend}
-                <Bar dataKey="given" name="נתתי" fill={palette.given} radius={[5, 5, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="received" name="קיבלתי" fill={palette.received} radius={[5, 5, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="given" name="נתתי" fill={palette.given} radius={[5, 5, 0, 0]} maxBarSize={32} {...chartAnim} />
+                <Bar dataKey="received" name="קיבלתי" fill={palette.received} radius={[5, 5, 0, 0]} maxBarSize={32} {...chartAnim} />
               </BarChart>
             </ChartCard>
 
@@ -282,8 +311,8 @@ export default function StatisticsPage({ nav }) {
                 />
                 {tooltip}
                 {legend}
-                <Bar dataKey="given" name="נתתי" fill={palette.given} radius={[6, 0, 0, 6]} maxBarSize={14} />
-                <Bar dataKey="received" name="קיבלתי" fill={palette.received} radius={[6, 0, 0, 6]} maxBarSize={14} />
+                <Bar dataKey="given" name="נתתי" fill={palette.given} radius={[6, 0, 0, 6]} maxBarSize={14} {...chartAnim} />
+                <Bar dataKey="received" name="קיבלתי" fill={palette.received} radius={[6, 0, 0, 6]} maxBarSize={14} {...chartAnim} />
               </BarChart>
             </ChartCard>
           </div>

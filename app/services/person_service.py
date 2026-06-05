@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.person import Person
 from app.repositories.person_repo import PersonRepository
+from app.repositories.transaction_repo import TransactionRepository
 from app.schemas.person import PersonCreate, PersonUpdate
 
 
@@ -12,6 +13,7 @@ class PersonService:
 
     def __init__(self, db: Session) -> None:
         self.repo = PersonRepository(db)
+        self.transactions = TransactionRepository(db)
 
     def create(self, data: PersonCreate, owner_id: int) -> Person:
         person = Person(**data.model_dump(), owner_id=owner_id)
@@ -35,6 +37,8 @@ class PersonService:
 
     def delete(self, person_id: int, owner_id: int) -> None:
         person = self.get(person_id, owner_id)  # reuse the 404 guard
+        # Cascade: a person's gifts go with them, in one transaction.
+        self.transactions.delete_by_person(person_id, owner_id)
         self.repo.delete(person)
 
     @staticmethod
