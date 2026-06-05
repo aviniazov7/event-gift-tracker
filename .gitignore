@@ -219,3 +219,6 @@ __marimo__/
 
 # Playwright MCP test artifacts
 .playwright-mcp/
+
+# UI/UX Pro Max skill — local IDE-assistant tooling (uipro init), not app code
+.agent/

@@ -13,7 +13,7 @@ export default function Layout({ onHome, onStats, children }) {
           <button
             type="button"
             onClick={onHome}
-            className="flex items-center gap-3 text-right"
+            className="focus-ring flex cursor-pointer items-center gap-3 rounded-xl text-right"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600">
               <Gift className="h-5 w-5 text-white" strokeWidth={2} aria-hidden="true" />
@@ -33,7 +33,7 @@ export default function Layout({ onHome, onStats, children }) {
                 onClick={onStats}
                 aria-label="סטטיסטיקות"
                 title="סטטיסטיקות"
-                className="rounded-xl p-2 text-muted transition hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
+                className="focus-ring cursor-pointer rounded-xl p-2.5 text-muted transition-colors duration-200 hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
               >
                 <BarChart3 className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -54,7 +54,7 @@ export default function Layout({ onHome, onStats, children }) {
                   onClick={logout}
                   aria-label="התנתקות"
                   title="התנתקות"
-                  className="rounded-xl p-2 text-muted transition hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
+                  className="focus-ring cursor-pointer rounded-xl p-2.5 text-muted transition-colors duration-200 hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
                 >
                   <LogOut className="h-5 w-5" aria-hidden="true" />
                 </button>

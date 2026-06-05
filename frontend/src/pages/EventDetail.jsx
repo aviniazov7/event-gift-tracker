@@ -21,12 +21,12 @@ function GiftRow({ gift, personName, onOpenPerson }) {
         <button
           type="button"
           onClick={() => onOpenPerson(gift.person_id)}
-          className="truncate text-sm font-medium text-ink hover:underline"
+          className="focus-ring cursor-pointer truncate rounded-md text-sm font-medium text-ink hover:underline"
         >
           {personName}
         </button>
       </div>
-      <span className="shrink-0 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+      <span className="shrink-0 text-base font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
         {formatMoney(gift.amount)}
       </span>
     </li>

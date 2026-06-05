@@ -4,6 +4,15 @@
    `dark:` variants apply when an ancestor (the <html>) has the `dark` class. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Shared keyboard-focus ring for every interactive element. The offset color is
+   the page background (cream → night in dark mode, flips automatically), so the
+   ring reads clearly in both themes without per-element dark: variants. */
+@layer components {
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
+  }
+}
+
 /* Warm, friendly theme tokens. Emerald (נתתי) and amber (קיבלתי) are reserved
    for money and get explicit dark: variants in the components. */
 @theme {
@@ -12,7 +21,7 @@
   --color-cream: #faf7f2; /* page background */
   --color-card: #ffffff; /* card surface */
   --color-ink: #2b2722; /* primary text */
-  --color-muted: #8a8275; /* secondary text */
+  --color-muted: #6f6757; /* secondary text — AA (≥4.5:1) on card and page */
 
   --color-night: #17150f; /* darkest surface, used by dark: variants (inputs) */
 }
@@ -95,4 +104,17 @@ html.dark .rdp-root {
   border: 1px solid var(--rdp-accent-color);
   color: #fff;
   font-weight: 600;
+}
+
+/* Respect users who ask for less motion: neutralise transitions/animations so
+   hover lifts, press scales and any chart/number animation effectively stop. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

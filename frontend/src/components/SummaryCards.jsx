@@ -9,10 +9,10 @@ function StatCard({ label, value, tone }) {
   };
   return (
     <div className="rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-sm dark:border-white/10">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">
-        {label}
+      <p className="text-xs font-medium text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums ${tones[tone]}`}>
+        {value}
       </p>
-      <p className={`mt-1 text-2xl font-semibold ${tones[tone]}`}>{value}</p>
     </div>
   );
 }

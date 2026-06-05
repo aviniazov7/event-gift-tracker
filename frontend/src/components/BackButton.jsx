@@ -4,7 +4,7 @@ export default function BackButton({ onClick, label = "חזרה" }) {
     <button
       type="button"
       onClick={onClick}
-      className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted transition hover:text-ink"
+      className="focus-ring mb-4 inline-flex cursor-pointer items-center gap-1 rounded-md px-1 py-0.5 text-sm font-medium text-muted transition-colors duration-200 hover:text-ink"
     >
       <svg
         viewBox="0 0 24 24"

@@ -3,6 +3,7 @@ import { directionOptions } from "../utils/labels.js";
 import { Field, fieldClasses } from "./FormField.jsx";
 import Select from "./Select.jsx";
 import PersonCombobox from "./PersonCombobox.jsx";
+import Spinner from "./Spinner.jsx";
 
 // The in-event add-row: pick/create a person + amount and add a gift to THIS
 // event. Direction is owned by the parent so it stays "sticky" across entries
@@ -84,8 +85,9 @@ export default function QuickAddGift({
       <button
         type="submit"
         disabled={!canSubmit}
-        className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+        className="focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
       >
+        {submitting && <Spinner />}
         {submitting ? "מוסיף…" : "הוסף"}
       </button>
     </form>

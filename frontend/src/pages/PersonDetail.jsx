@@ -15,20 +15,20 @@ function ReciprocitySummary({ reciprocity }) {
     <div className="grid grid-cols-3 gap-3">
       <div className="rounded-2xl border border-black/5 bg-card px-4 py-3 text-center shadow-sm dark:border-white/10">
         <p className="text-xs text-muted">נתת</p>
-        <p className="mt-1 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+        <p className="mt-1 text-base font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
           {formatMoney(reciprocity.total_given)}
         </p>
       </div>
       <div className="rounded-2xl border border-black/5 bg-card px-4 py-3 text-center shadow-sm dark:border-white/10">
         <p className="text-xs text-muted">קיבלת</p>
-        <p className="mt-1 text-base font-semibold text-amber-600 dark:text-amber-400">
+        <p className="mt-1 text-base font-semibold tabular-nums text-amber-600 dark:text-amber-400">
           {formatMoney(reciprocity.total_received)}
         </p>
       </div>
       <div className="rounded-2xl border border-black/5 bg-card px-4 py-3 text-center shadow-sm dark:border-white/10">
         <p className="text-xs text-muted">מאזן</p>
         <p
-          className={`mt-1 text-base font-semibold ${
+          className={`mt-1 text-base font-semibold tabular-nums ${
             balance >= 0
               ? "text-emerald-600 dark:text-emerald-400"
               : "text-rose-600 dark:text-rose-400"
@@ -120,12 +120,12 @@ export default function PersonDetail({ personId, nav }) {
                     <button
                       type="button"
                       onClick={() => nav.openEvent(gift.event_id)}
-                      className="truncate text-sm font-medium text-ink hover:underline"
+                      className="focus-ring cursor-pointer truncate rounded-md text-sm font-medium text-ink hover:underline"
                     >
                       {eventName(gift.event_id)}
                     </button>
                   </div>
-                  <span className="shrink-0 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="shrink-0 text-base font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatMoney(gift.amount)}
                   </span>
                 </li>

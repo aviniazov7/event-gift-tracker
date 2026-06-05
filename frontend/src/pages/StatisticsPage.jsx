@@ -87,10 +87,10 @@ function StatCard({ label, value, tone = "ink" }) {
   };
   return (
     <div className="rounded-2xl border border-black/5 bg-card px-4 py-3 shadow-sm dark:border-white/10">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">
-        {label}
+      <p className="text-xs font-medium text-muted">{label}</p>
+      <p className={`mt-1 text-xl font-semibold tabular-nums ${tones[tone]}`}>
+        {value}
       </p>
-      <p className={`mt-1 text-xl font-semibold ${tones[tone]}`}>{value}</p>
     </div>
   );
 }
@@ -181,10 +181,10 @@ export default function StatisticsPage({ nav }) {
         {/* Biggest gift highlight */}
         {data.biggest_gift && (
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
-            <p className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
               המתנה הגדולה ביותר
             </p>
-            <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-200">
+            <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-700 dark:text-emerald-200">
               {formatMoney(data.biggest_gift.amount)}
             </p>
             <p className="text-sm text-muted">

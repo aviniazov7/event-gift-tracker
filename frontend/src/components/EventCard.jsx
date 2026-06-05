@@ -12,7 +12,7 @@ export default function EventCard({ event, stats, onOpen }) {
       <button
         type="button"
         onClick={() => onOpen(event.id)}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 text-right shadow-sm transition hover:border-emerald-300 dark:border-white/10 dark:hover:border-emerald-500/40"
+        className="focus-ring flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 text-right shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.99] dark:border-white/10 dark:hover:border-emerald-500/40"
       >
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function EventCard({ event, stats, onOpen }) {
         <div className="shrink-0 text-left">
           <p className="text-xs text-muted">מאזן</p>
           <p
-            className={`text-lg font-semibold ${
+            className={`text-lg font-semibold tabular-nums ${
               net >= 0
                 ? "text-emerald-600 dark:text-emerald-400"
                 : "text-rose-600 dark:text-rose-400"

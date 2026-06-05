@@ -45,7 +45,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "מצב יום" : "מצב לילה"}
       title={isDark ? "מצב יום" : "מצב לילה"}
-      className="rounded-xl p-2 text-muted transition hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
+      className="focus-ring cursor-pointer rounded-xl p-2.5 text-muted transition-colors duration-200 hover:bg-black/5 hover:text-ink dark:hover:bg-white/10"
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
     </button>
