@@ -17,7 +17,12 @@ const CREATE = "__create__";
 //
 // `value` is { id, name } | null (id is null for a not-yet-created event);
 // `onChange` receives the same { id, name } shape (or null when cleared).
-export default function EventCombobox({ events, value, onChange }) {
+export default function EventCombobox({
+  events,
+  value,
+  onChange,
+  placeholder = "שם האירוע (לדוגמה: החתונה של נועה)",
+}) {
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
@@ -46,7 +51,7 @@ export default function EventCombobox({ events, value, onChange }) {
       <div className="relative">
         <ComboboxInput
           className={fieldClasses}
-          placeholder="בחר או הוסף אירוע…"
+          placeholder={placeholder}
           displayValue={() => value?.name ?? ""}
           onChange={(e) => setQuery(e.target.value)}
         />

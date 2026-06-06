@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { DayPicker } from "react-day-picker";
 
@@ -17,12 +18,38 @@ function toISO(date) {
   return `${y}-${m}-${d}`;
 }
 
-// Trigger shows the Israeli display format DD/MM/YYYY.
+// ISO -> Israeli display format DD/MM/YYYY (and back, validating real dates).
 function formatDisplay(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
+
+function parseTyped(text) {
+  const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const d = Number(match[1]);
+  const mo = Number(match[2]);
+  const y = Number(match[3]);
+  const date = new Date(y, mo - 1, d);
+  // Reject impossible dates (e.g. 31/02/2026 rolls over to March).
+  if (
+    date.getFullYear() !== y ||
+    date.getMonth() !== mo - 1 ||
+    date.getDate() !== d
+  ) {
+    return null;
+  }
+  return toISO(date);
+}
+
+// Hebrew month + weekday names for the calendar (no date-fns dependency).
+const heMonth = new Intl.DateTimeFormat("he-IL", { month: "long" });
+const heWeekday = new Intl.DateTimeFormat("he-IL", { weekday: "narrow" });
+const FORMATTERS = {
+  formatMonthDropdown: (date) => heMonth.format(date),
+  formatWeekdayName: (date) => heWeekday.format(date),
+};
 
 function CalendarIcon() {
   return (
@@ -33,7 +60,7 @@ function CalendarIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-4 w-4 shrink-0 text-muted"
+      className="h-4 w-4 shrink-0"
       aria-hidden="true"
     >
       <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -42,17 +69,61 @@ function CalendarIcon() {
   );
 }
 
-export default function DatePicker({ value, onChange, placeholder = "בחר תאריך" }) {
+// A date field you can TYPE (DD/MM/YYYY) or pick from the calendar. The calendar
+// icon opens a popover with month + year dropdowns for fast far-date navigation.
+// onChange always emits ISO (YYYY-MM-DD).
+export default function DatePicker({ value, onChange, placeholder = "DD/MM/YYYY" }) {
   const selected = parseISO(value);
+  const [text, setText] = useState(formatDisplay(value));
+
+  // Keep the input text in sync when the value changes from outside (a calendar
+  // pick, or the form resetting after submit).
+  useEffect(() => {
+    setText(formatDisplay(value));
+  }, [value]);
+
+  function handleType(next) {
+    setText(next);
+    // Push upward only once a complete, valid date is typed; clearing empties it.
+    if (next.trim() === "") onChange("");
+    else {
+      const iso = parseTyped(next);
+      if (iso) onChange(iso);
+    }
+  }
+
+  function handleBlur() {
+    if (text.trim() === "") return;
+    // On blur, snap back to the last valid value if what's typed isn't a date.
+    if (!parseTyped(text)) setText(formatDisplay(value));
+  }
+
+  // Bound the year dropdown to a useful range around today.
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear() - 20, 0);
+  const endMonth = new Date(now.getFullYear() + 5, 11);
 
   return (
     <Popover className="relative">
-      <PopoverButton className="box-border flex w-full max-w-full items-center justify-between gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-right text-sm text-ink outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-white/15 dark:bg-night dark:text-ink dark:focus:border-emerald-500 dark:focus:ring-emerald-500/25">
-        <span className={value ? "" : "text-muted"}>
-          {value ? formatDisplay(value) : placeholder}
-        </span>
-        <CalendarIcon />
-      </PopoverButton>
+      <div className="box-border flex w-full max-w-full items-center gap-1 rounded-xl border border-black/10 bg-white pr-3 text-sm text-ink focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 dark:border-white/15 dark:bg-night dark:focus-within:border-emerald-500 dark:focus-within:ring-emerald-500/25">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={text}
+          placeholder={placeholder}
+          onChange={(e) => handleType(e.target.value)}
+          onBlur={handleBlur}
+          aria-label="תאריך (יום/חודש/שנה)"
+          className="min-w-0 flex-1 bg-transparent py-2 tabular-nums text-ink outline-none placeholder:text-muted"
+        />
+        <PopoverButton
+          aria-label="פתח לוח שנה"
+          title="פתח לוח שנה"
+          className="focus-ring -ml-1 shrink-0 cursor-pointer rounded-lg p-1.5 text-muted transition-colors duration-200 hover:text-ink"
+        >
+          <CalendarIcon />
+        </PopoverButton>
+      </div>
 
       <PopoverPanel
         anchor={{ to: "bottom start", gap: 8 }}
@@ -62,6 +133,10 @@ export default function DatePicker({ value, onChange, placeholder = "בחר תא
           <DayPicker
             mode="single"
             dir="rtl"
+            captionLayout="dropdown"
+            startMonth={startMonth}
+            endMonth={endMonth}
+            formatters={FORMATTERS}
             selected={selected}
             defaultMonth={selected ?? new Date()}
             onSelect={(date) => {

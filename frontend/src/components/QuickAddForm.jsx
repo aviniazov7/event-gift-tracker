@@ -80,7 +80,7 @@ export default function QuickAddForm({ events, persons, onSubmit }) {
       <h3 className="text-base font-semibold tracking-tight">הוספה מהירה</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="אירוע">
+        <Field label="אירוע (שם)">
           <EventCombobox
             events={events}
             value={form.event}
@@ -97,20 +97,26 @@ export default function QuickAddForm({ events, persons, onSubmit }) {
         </Field>
       </div>
 
-      {/* Extra fields for a brand-new event only. */}
+      {/* Extra fields for a brand-new event only. The "type" here is the
+          category (not the name) — it drives the statistics-by-type breakdown. */}
       {isNewEvent && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="סוג האירוע">
-            <Select
-              value={form.newType}
-              onChange={(value) => set({ newType: value })}
-              options={eventTypeOptions.map(([value, label]) => ({
-                value,
-                label,
-              }))}
-            />
-          </Field>
-          <div className="flex items-end pb-2">
+          <div>
+            <Field label="סוג האירוע (קטגוריה)">
+              <Select
+                value={form.newType}
+                onChange={(value) => set({ newType: value })}
+                options={eventTypeOptions.map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+              />
+            </Field>
+            <p className="mt-1.5 text-xs text-muted">
+              הקטגוריה (חתונה, ברית…) משמשת לפילוח בסטטיסטיקות.
+            </p>
+          </div>
+          <div className="flex items-start pt-6">
             <Toggle
               checked={form.newIsMine}
               onChange={(value) => set({ newIsMine: value })}
