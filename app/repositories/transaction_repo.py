@@ -45,6 +45,31 @@ class TransactionRepository:
             )
         )
 
+    def list_for_export(
+        self, owner_id: int, direction: Direction | None = None
+    ) -> list[Row]:
+        """Rows for CSV export — (date, person_name, event_title, event_type,
+        direction, amount), joined and owner-scoped, oldest first. Optionally
+        filtered by direction."""
+        conditions = [Transaction.owner_id == owner_id]
+        if direction is not None:
+            conditions.append(Transaction.direction == direction)
+        stmt = (
+            select(
+                Transaction.date,
+                Person.full_name,
+                Event.title,
+                Event.type,
+                Transaction.direction,
+                Transaction.amount,
+            )
+            .join(Person, Person.id == Transaction.person_id)
+            .join(Event, Event.id == Transaction.event_id)
+            .where(*conditions)
+            .order_by(Transaction.date, Transaction.id)
+        )
+        return list(self.db.execute(stmt))
+
     def list(
         self, owner_id: int, filters: TransactionFilter | None = None
     ) -> list[Transaction]:

@@ -1,7 +1,12 @@
+# Deferred annotations: this class has a method named `list`, which would
+# otherwise shadow the builtin `list` when later annotations (list[Row]) evaluate.
+from __future__ import annotations
+
 from fastapi import HTTPException, status
+from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
-from app.models.transaction import Transaction
+from app.models.transaction import Direction, Transaction
 from app.repositories.event_repo import EventRepository
 from app.repositories.person_repo import PersonRepository
 from app.repositories.transaction_repo import TransactionRepository
@@ -34,6 +39,12 @@ class TransactionService:
         self, owner_id: int, filters: TransactionFilter | None = None
     ) -> list[Transaction]:
         return self.repo.list(owner_id, filters)
+
+    def list_for_export(
+        self, owner_id: int, direction: Direction | None = None
+    ) -> list[Row]:
+        """Joined rows for CSV export, optionally filtered by direction."""
+        return self.repo.list_for_export(owner_id, direction)
 
     def get(self, transaction_id: int, owner_id: int) -> Transaction:
         transaction = self.repo.get(transaction_id, owner_id)

@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  downloadTransactionsCsv,
   getEvents,
   getPersons,
   getSummary,
   getTransactions,
 } from "../api/client.js";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Download } from "lucide-react";
 import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
 import AnimatedMoney from "../components/AnimatedMoney.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import Skeleton from "../components/Skeleton.jsx";
+import Spinner from "../components/Spinner.jsx";
 import { formatMoney } from "../utils/money.js";
 import { formatDate } from "../utils/dates.js";
 
@@ -99,6 +101,7 @@ export default function TransactionsPage({ nav }) {
   const [events, setEvents] = useState([]);
   const [summary, setSummary] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [exporting, setExporting] = useState(false);
 
   // Reuse the endpoint's direction filter: refetch the list when the tab
   // changes ("all" sends no direction).
@@ -122,6 +125,16 @@ export default function TransactionsPage({ nav }) {
   function selectTab(key) {
     setTab(key);
     loadTxns(key).catch(() => setStatus("error"));
+  }
+
+  // Export the current view (honours the active tab) to a CSV download.
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadTransactionsCsv(tab);
+    } finally {
+      setExporting(false);
+    }
   }
 
   const personName = useMemo(() => {
@@ -183,8 +196,21 @@ export default function TransactionsPage({ nav }) {
       <BackButton onClick={nav.back} />
 
       <div className="space-y-6">
-        <header>
+        <header className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-semibold tracking-tight">תנועות</h2>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting || txns.length === 0}
+            className="focus-ring inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-black/10 px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-200 hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
+          >
+            {exporting ? (
+              <Spinner />
+            ) : (
+              <Download className="h-4 w-4" aria-hidden="true" />
+            )}
+            ייצוא ל-CSV
+          </button>
         </header>
 
         {/* Active-tab total + the segmented control. */}

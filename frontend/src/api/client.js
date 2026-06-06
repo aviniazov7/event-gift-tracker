@@ -212,3 +212,32 @@ export function deleteEvent(id) {
 export function deletePerson(id) {
   return del(`/persons/${id}`);
 }
+
+// Download the user's transactions as a CSV file. Uses an authenticated fetch
+// (the Bearer header can't ride on a plain <a href>), then triggers a browser
+// download from the blob. `direction` ("given"|"received") mirrors the active
+// tab; "all"/undefined exports everything.
+export async function downloadTransactionsCsv(direction) {
+  const query = new URLSearchParams();
+  if (direction && direction !== "all") query.append("direction", direction);
+  const qs = query.toString();
+  const res = await fetch(
+    `${API_BASE}/export/transactions.csv${qs ? `?${qs}` : ""}`,
+    { headers: authToken ? { Authorization: `Bearer ${authToken}` } : {} },
+  );
+  if (res.status === 401) {
+    unauthorizedHandler?.();
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "giftledger.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
