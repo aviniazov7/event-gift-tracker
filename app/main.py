@@ -28,13 +28,20 @@ app.include_router(stats.router)
 
 
 @app.get("/health")
-def health() -> JSONResponse:
-    """Liveness + readiness check.
+def health() -> dict:
+    """Liveness probe (this is render.yaml's healthCheckPath).
 
-    Returns 200 only when the database is actually reachable, so the
-    container orchestrator can tell the difference between "process up"
-    and "app actually usable".
+    Pure and instant: returns 200 with NO database query or external call, so a
+    cold container passes immediately and the deploy never times out waiting on
+    the health check. For an "is the app actually usable" check, use /ready.
     """
+    return {"status": "ok"}
+
+
+@app.get("/ready")
+def ready() -> JSONResponse:
+    """Readiness probe: 200 only when the database is reachable, 503 otherwise.
+    Kept separate from the fast liveness check above."""
     try:
         # SELECT 1 is the cheapest way to confirm the connection is alive.
         with engine.connect() as connection:
