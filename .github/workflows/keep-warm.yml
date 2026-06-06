@@ -1,0 +1,32 @@
+name: keep-warm
+
+# Pings the Render free-tier backend so it doesn't sleep (and cold-start ~50s)
+# during active hours. Render free services spin down after ~15 min idle, so we
+# ping a little more often than that.
+#
+# GitHub cron is UTC and has no timezone support. Israel is UTC+2 (winter, IST)
+# or UTC+3 (summer, IDT). UTC 03:00–21:00 covers ~06:00–23:00 Israel across both
+# offsets. Outside those hours the backend is left to sleep (free).
+on:
+  schedule:
+    - cron: "*/14 3-21 * * *" # ~every 14 minutes, 03:00–21:59 UTC
+  workflow_dispatch: {} # allow manual runs
+
+# Never pile up if a run is slow (a cold start can take ~a minute).
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        env:
+          URL: https://giftledger-api.onrender.com/health
+        run: |
+          echo "Pinging $URL"
+          # -f: treat HTTP >= 400 as failure; the || keeps a transient miss (e.g.
+          # mid-deploy) from failing the job and spamming notifications.
+          code=$(curl -fsS -o /dev/null -w "%{http_code}" --max-time 90 "$URL" || echo "000")
+          echo "HTTP $code"
