@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { DayPicker } from "react-day-picker";
 import Select from "./Select.jsx";
+import { formatDate } from "../utils/dates.js";
 
 // ISO (YYYY-MM-DD) <-> Date helpers. We build the Date from local parts so the
 // value never shifts across timezones, and emit ISO so nothing downstream
@@ -19,13 +20,8 @@ function toISO(date) {
   return `${y}-${m}-${d}`;
 }
 
-// ISO -> Israeli display format DD/MM/YYYY (and back, validating real dates).
-function formatDisplay(iso) {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
+// Display formatting (ISO -> DD/MM/YYYY) is the shared helper; parsing typed
+// input back to ISO (validating real dates) is local to the picker.
 function parseTyped(text) {
   const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (!match) return null;
@@ -101,12 +97,12 @@ function CalendarIcon() {
 // onChange always emits ISO (YYYY-MM-DD).
 export default function DatePicker({ value, onChange, placeholder = "DD/MM/YYYY" }) {
   const selected = parseISO(value);
-  const [text, setText] = useState(formatDisplay(value));
+  const [text, setText] = useState(formatDate(value));
 
   // Keep the input text in sync when the value changes from outside (a calendar
   // pick, or the form resetting after submit).
   useEffect(() => {
-    setText(formatDisplay(value));
+    setText(formatDate(value));
   }, [value]);
 
   function handleType(next) {
@@ -122,7 +118,7 @@ export default function DatePicker({ value, onChange, placeholder = "DD/MM/YYYY"
   function handleBlur() {
     if (text.trim() === "") return;
     // On blur, snap back to the last valid value if what's typed isn't a date.
-    if (!parseTyped(text)) setText(formatDisplay(value));
+    if (!parseTyped(text)) setText(formatDate(value));
   }
 
   // Bound the year dropdown to a useful range around today.

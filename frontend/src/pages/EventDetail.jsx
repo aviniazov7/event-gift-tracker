@@ -13,6 +13,7 @@ import DeleteButton from "../components/DeleteButton.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { eventTypeLabels } from "../utils/labels.js";
 import { formatMoney } from "../utils/money.js";
+import { formatDate } from "../utils/dates.js";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -144,7 +145,7 @@ export default function EventDetail({ eventId, nav }) {
               {eventTypeLabels[event.type] ?? event.type}
             </span>
           </div>
-          <p className="text-sm text-muted">{event.event_date}</p>
+          <p className="text-sm text-muted">{formatDate(event.event_date)}</p>
         </header>
 
         <QuickAddGift

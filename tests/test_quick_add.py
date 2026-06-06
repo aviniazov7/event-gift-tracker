@@ -53,6 +53,47 @@ def test_quick_add_into_existing_event_reuses_it(client, event):
     assert len(txns) == 2
 
 
+def test_quick_add_same_name_different_date_makes_separate_events(client):
+    # An event is identified by (name, date): two "חתונה" on different dates
+    # must stay two separate events, not merge into one.
+    base = {
+        "person": {"name": "אורח"},
+        "direction": "given",
+        "amount": "100.00",
+    }
+    first = client.post(
+        "/quick-add",
+        json={**base, "event": {"name": "חתונה", "type": "wedding"}, "date": "2025-09-11"},
+    ).json()
+    second = client.post(
+        "/quick-add",
+        json={**base, "event": {"name": "חתונה", "type": "wedding"}, "date": "2025-05-16"},
+    ).json()
+
+    assert first["event"]["id"] != second["event"]["id"]
+    assert len(client.get("/events").json()) == 2
+
+
+def test_quick_add_same_name_same_date_reuses_event(client):
+    # Same name AND same date → reuse the existing event (case-insensitive name).
+    base = {
+        "direction": "given",
+        "amount": "100.00",
+        "date": "2025-09-11",
+    }
+    first = client.post(
+        "/quick-add",
+        json={**base, "event": {"name": "חתונה", "type": "wedding"}, "person": {"name": "א"}},
+    ).json()
+    second = client.post(
+        "/quick-add",
+        json={**base, "event": {"name": "  חתונה ", "type": "wedding"}, "person": {"name": "ב"}},
+    ).json()
+
+    assert first["event"]["id"] == second["event"]["id"]
+    assert len(client.get("/events").json()) == 1
+
+
 def test_quick_add_reuses_existing_person_by_name(client):
     # Same person name twice (case-insensitive) → one person, two gifts.
     base = {

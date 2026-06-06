@@ -40,9 +40,9 @@ def test_overview_aggregates(client):
     assert body["total_given"] == "800.00"
     assert body["total_received"] == "100.00"
     assert body["net"] == "700.00"
-    # Two "חתונה" entries are two distinct events (events aren't deduped by
-    # name), plus the ברית → 3 events; דנה is reused so only 2 people.
-    assert body["event_count"] == 3
+    # Both "חתונה" entries share the same name AND date, so they're the same
+    # event; with the ברית that's 2 events. דנה is reused so only 2 people.
+    assert body["event_count"] == 2
     assert body["person_count"] == 2  # דנה reused, יוסי new
     assert body["gift_count"] == 3
     # avg given = (300 + 500) / 2 = 400

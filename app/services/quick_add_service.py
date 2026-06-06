@@ -73,13 +73,22 @@ class QuickAddService:
                 raise self._not_found("Event", ref.id)
             return event
 
-        # New event from the typed name; fill the optionals with sensible
-        # defaults (type→other, date→the gift's date, is_mine→False).
+        # New event from the typed name. An event is identified by
+        # (owner_id, name, date): reuse one only when BOTH the name and the date
+        # match, so the same name on a different date stays a separate event.
+        title = ref.name.strip()
+        event_date = ref.date or fallback_date
+        existing = self.events.get_by_name_and_date(title, event_date, owner_id)
+        if existing is not None:
+            return existing
+
+        # Otherwise create it, filling the optionals with sensible defaults
+        # (type→other, is_mine→False).
         event = Event(
             owner_id=owner_id,
-            title=ref.name.strip(),
+            title=title,
             type=ref.type or EventType.other,
-            event_date=ref.date or fallback_date,
+            event_date=event_date,
             is_mine=bool(ref.is_mine),
         )
         return self.events.add(event)

@@ -9,6 +9,7 @@ import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
 import AnimatedMoney from "../components/AnimatedMoney.jsx";
 import { formatMoney } from "../utils/money.js";
+import { formatDate } from "../utils/dates.js";
 
 // Tabs map to the transactions endpoint's `direction` filter ("all" = no filter).
 const TABS = [
@@ -42,7 +43,7 @@ function TransactionRow({ tx, personName, eventName, index, nav }) {
             >
               {eventName}
             </button>{" "}
-            · {tx.date}
+            · {formatDate(tx.date)}
           </p>
         </div>
       </div>

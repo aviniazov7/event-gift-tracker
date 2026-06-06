@@ -7,6 +7,7 @@ import {
 } from "@headlessui/react";
 import { Plus } from "lucide-react";
 import { fieldClasses } from "./FormField.jsx";
+import { formatDate } from "../utils/dates.js";
 
 const CREATE = "__create__";
 
@@ -30,8 +31,10 @@ export default function EventCombobox({
     q === ""
       ? events
       : events.filter((e) => e.title.toLowerCase().includes(q));
-  const exactMatch = events.some((e) => e.title.trim().toLowerCase() === q);
-  const canCreate = q !== "" && !exactMatch;
+  // Always offer to create when something is typed — even if the name matches an
+  // existing event — because an event is identified by name AND date, so the
+  // same name on a different date is a new event (the backend dedupes by both).
+  const canCreate = q !== "";
 
   function handleChange(val) {
     if (val === CREATE) {
@@ -61,9 +64,13 @@ export default function EventCombobox({
             <ComboboxOption
               key={e.id}
               value={String(e.id)}
-              className="flex cursor-pointer items-center px-3 py-2 text-ink data-[focus]:bg-emerald-50 data-[focus]:text-emerald-700 dark:data-[focus]:bg-emerald-500/15 dark:data-[focus]:text-emerald-300"
+              className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-ink data-[focus]:bg-emerald-50 data-[focus]:text-emerald-700 dark:data-[focus]:bg-emerald-500/15 dark:data-[focus]:text-emerald-300"
             >
               <span className="truncate">{e.title}</span>
+              {/* The date disambiguates same-named events (e.g. two "חתונה"). */}
+              <span className="shrink-0 text-xs text-muted">
+                {formatDate(e.event_date)}
+              </span>
             </ComboboxOption>
           ))}
 

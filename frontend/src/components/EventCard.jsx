@@ -1,5 +1,6 @@
 import { eventTypeLabels } from "../utils/labels.js";
 import { formatMoney } from "../utils/money.js";
+import { formatDate } from "../utils/dates.js";
 import DeleteButton from "./DeleteButton.jsx";
 
 // One event in the home list. `stats` is { net, count } aggregated from this
@@ -29,7 +30,7 @@ export default function EventCard({ event, stats, index = 0, onOpen, onDelete })
               </span>
             </div>
             <p className="text-sm text-muted">
-              {event.event_date} · {count} מתנות
+              {formatDate(event.event_date)} · {count} מתנות
             </p>
           </div>
 

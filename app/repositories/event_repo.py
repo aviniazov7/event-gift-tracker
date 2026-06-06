@@ -1,3 +1,5 @@
+import datetime as dt
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -34,6 +36,20 @@ class EventRepository:
     def get(self, event_id: int, owner_id: int) -> Event | None:
         return self.db.scalar(
             select(Event).where(Event.id == event_id, Event.owner_id == owner_id)
+        )
+
+    def get_by_name_and_date(
+        self, title: str, event_date: dt.date, owner_id: int
+    ) -> Event | None:
+        """Find one of the owner's events by name (case-insensitive, trimmed)
+        AND date. An event is identified by (owner_id, name, date), so the same
+        name on a different date is a different event."""
+        return self.db.scalar(
+            select(Event).where(
+                Event.owner_id == owner_id,
+                func.lower(Event.title) == title.strip().lower(),
+                Event.event_date == event_date,
+            )
         )
 
     def list(self, owner_id: int) -> list[Event]:
