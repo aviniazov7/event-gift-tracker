@@ -112,36 +112,13 @@ html.dark .rdp-root {
   font-weight: 600;
 }
 
-/* Month/year dropdowns (captionLayout="dropdown"): the visible caption label
-   reads as a small button; the native <select> sits invisibly over it. */
+/* Month/year dropdowns (captionLayout="dropdown") are rendered by the app's
+   themed Select (see DatePicker's Dropdown override); this just lays the two
+   selectors side by side, each taking half the width. */
 .rdp-dropdowns {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-}
-.rdp-dropdown_root {
-  position: relative;
-  display: inline-flex;
-}
-.rdp-dropdown_root .rdp-caption_label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  border: 1px solid rgb(0 0 0 / 0.1);
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  font-weight: 600;
-}
-html.dark .rdp-dropdown_root .rdp-caption_label {
-  border-color: rgb(255 255 255 / 0.15);
-}
-.rdp-dropdown_root:hover .rdp-caption_label {
-  background-color: var(--rdp-accent-background-color);
-}
-/* Keyboard focus ring on the (invisible) select reflects onto the label. */
-.rdp-dropdown:focus-visible ~ .rdp-caption_label {
-  outline: 2px solid var(--color-emerald-400);
-  outline-offset: 2px;
 }
 
 /* ---- Depth + entrance motion (within the brand) ---- */

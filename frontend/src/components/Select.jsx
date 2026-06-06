@@ -42,13 +42,16 @@ function CheckIcon() {
 // Styled, accessible replacement for a native <select>. Same contract as a
 // controlled input: `value` plus `onChange(newValue)`. Options are
 // [{ value, label }]. RTL- and dark-mode-aware to match the form inputs.
-export default function Select({ value, onChange, options, placeholder }) {
+export default function Select({ value, onChange, options, placeholder, ariaLabel }) {
   const selected = options.find((o) => String(o.value) === String(value));
 
   return (
     <Listbox value={value} onChange={onChange}>
       <div className="relative">
-        <ListboxButton className="box-border flex w-full max-w-full items-center justify-between gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-right text-sm text-ink outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-white/15 dark:bg-night dark:text-ink dark:focus:border-emerald-500 dark:focus:ring-emerald-500/25">
+        <ListboxButton
+          aria-label={ariaLabel}
+          className="box-border flex w-full max-w-full items-center justify-between gap-2 rounded-xl border border-black/10 bg-white px-3 py-2 text-right text-sm text-ink outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-white/15 dark:bg-night dark:text-ink dark:focus:border-emerald-500 dark:focus:ring-emerald-500/25"
+        >
           <span className={`truncate ${selected ? "" : "text-muted"}`}>
             {selected ? selected.label : placeholder}
           </span>
