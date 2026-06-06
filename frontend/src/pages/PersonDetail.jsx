@@ -7,10 +7,13 @@ import {
   getReciprocity,
   getTransactions,
 } from "../api/client.js";
+import { Gift } from "lucide-react";
 import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
 import DeleteButton from "../components/DeleteButton.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import Skeleton from "../components/Skeleton.jsx";
 import { formatMoney } from "../utils/money.js";
 
 function ReciprocitySummary({ reciprocity }) {
@@ -110,7 +113,18 @@ export default function PersonDetail({ personId, nav }) {
   }
 
   if (status === "loading") {
-    return <p className="text-sm text-muted">טוען…</p>;
+    return (
+      <div className="animate-page space-y-4">
+        <Skeleton className="h-7 w-40" />
+        <div className="grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+          ))}
+        </div>
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+      </div>
+    );
   }
 
   if (status === "error" || !person) {
@@ -148,9 +162,11 @@ export default function PersonDetail({ personId, nav }) {
           </div>
 
           {gifts.length === 0 ? (
-            <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
-              אין מתנות לאדם זה עדיין.
-            </div>
+            <EmptyState
+              icon={Gift}
+              title="אין מתנות לאדם זה עדיין"
+              description="מתנות שתתעדו עבורו יופיעו כאן."
+            />
           ) : (
             <ul className="space-y-3">
               {gifts.map((gift, i) => {

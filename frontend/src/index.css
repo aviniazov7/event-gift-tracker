@@ -123,17 +123,85 @@ html.dark .rdp-root {
 
 /* ---- Depth + entrance motion (within the brand) ---- */
 
-/* Softer, layered elevation — a tight contact shadow plus a wide soft one.
-   Tuned per theme so cards read as "lifted" without looking heavy. */
+/* Softer, layered elevation — a top inner highlight (lit-from-above), a tight
+   contact shadow, and a wide soft one. Tuned per theme so cards read as
+   "lifted" with a little depth rather than flat. */
 .shadow-soft {
   box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
     0 1px 2px rgb(43 39 34 / 0.05),
     0 10px 30px -18px rgb(43 39 34 / 0.25);
 }
 html.dark .shadow-soft {
   box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
     0 1px 2px rgb(0 0 0 / 0.5),
     0 16px 36px -20px rgb(0 0 0 / 0.7);
+}
+
+/* Interactive card: a gentle hover lift with a soft emerald glow + emerald
+   border, and a small press feedback. ~170ms; the reduced-motion guard below
+   neutralises the transition. Pair with shadow-soft for the resting state. */
+.lift {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.lift:hover {
+  transform: translateY(-2px);
+  border-color: rgb(16 185 129 / 0.4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    0 1px 2px rgb(43 39 34 / 0.06),
+    0 16px 36px -16px rgb(16 185 129 / 0.35);
+}
+html.dark .lift:hover {
+  border-color: rgb(16 185 129 / 0.45);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.5),
+    0 20px 44px -18px rgb(16 185 129 / 0.4);
+}
+.lift:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* Skeleton shimmer for loading placeholders. The base is a faint neutral block;
+   a soft band sweeps across. Static (no sweep) under reduced motion. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(43 39 34 / 0.07);
+}
+html.dark .skeleton {
+  background-color: rgb(255 255 255 / 0.08);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.55),
+    transparent
+  );
+  animation: gl-shimmer 1.6s ease-in-out infinite;
+}
+html.dark .skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.09),
+    transparent
+  );
+}
+@keyframes gl-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes gl-fade-up {

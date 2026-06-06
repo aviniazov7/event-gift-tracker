@@ -5,11 +5,43 @@ import {
   getSummary,
   getTransactions,
 } from "../api/client.js";
+import { ArrowRightLeft } from "lucide-react";
 import BackButton from "../components/BackButton.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
 import AnimatedMoney from "../components/AnimatedMoney.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import Skeleton from "../components/Skeleton.jsx";
 import { formatMoney } from "../utils/money.js";
 import { formatDate } from "../utils/dates.js";
+
+// Branded loading placeholder mirroring the total card + segmented control + rows.
+function TransactionsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-soft dark:border-white/10">
+        <div className="flex flex-col items-center gap-2">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-8 w-40" />
+        </div>
+        <Skeleton className="h-9 w-full rounded-xl" />
+      </div>
+      <ul className="space-y-3">
+        {[0, 1, 2, 3].map((i) => (
+          <li
+            key={i}
+            className="flex items-center justify-between rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+          >
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+            <Skeleton className="h-5 w-16" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 // Tabs map to the transactions endpoint's `direction` filter ("all" = no filter).
 const TABS = [
@@ -22,7 +54,7 @@ function TransactionRow({ tx, personName, eventName, index, nav }) {
   const given = tx.direction === "given";
   return (
     <li
-      className="animate-row flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+      className="animate-row flex items-center justify-between gap-3 rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft transition-colors duration-200 hover:border-emerald-300 dark:border-white/10 dark:hover:border-emerald-500/40"
       style={{ "--row-delay": `${Math.min(index, 10) * 35}ms` }}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -104,9 +136,9 @@ export default function TransactionsPage({ nav }) {
 
   if (status === "loading") {
     return (
-      <div>
+      <div className="animate-page">
         <BackButton onClick={nav.back} />
-        <p className="text-sm text-muted">טוען…</p>
+        <TransactionsSkeleton />
       </div>
     );
   }
@@ -156,12 +188,12 @@ export default function TransactionsPage({ nav }) {
         </header>
 
         {/* Active-tab total + the segmented control. */}
-        <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-sm dark:border-white/10">
+        <div className="space-y-4 rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-soft dark:border-white/10">
           <div className="text-center">
             <p className="text-xs font-medium text-muted">{active.label}</p>
             <AnimatedMoney
               value={active.value}
-              className={`mt-1 block text-3xl font-semibold ${active.tone}`}
+              className={`mt-1 block text-3xl font-semibold tracking-tight ${active.tone}`}
             />
           </div>
 
@@ -200,9 +232,20 @@ export default function TransactionsPage({ nav }) {
           </div>
 
           {txns.length === 0 ? (
-            <div className="rounded-2xl border border-black/5 bg-card px-5 py-10 text-center text-sm text-muted dark:border-white/10">
-              אין תנועות להצגה.
-            </div>
+            <EmptyState
+              icon={ArrowRightLeft}
+              title="אין תנועות להצגה"
+              description="כשתוסיפו מתנות הן יופיעו כאן, מסוננות לפי כיוון."
+              action={
+                <button
+                  type="button"
+                  onClick={nav.goHome}
+                  className="focus-ring inline-flex cursor-pointer items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-emerald-700 active:scale-[0.98] dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                >
+                  הוספת מתנה
+                </button>
+              }
+            />
           ) : (
             <ul className="space-y-3">
               {txns.map((tx, i) => (

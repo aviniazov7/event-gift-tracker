@@ -10,9 +10,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { BarChart3 } from "lucide-react";
 import { getOverview } from "../api/client.js";
 import BackButton from "../components/BackButton.jsx";
 import AnimatedMoney from "../components/AnimatedMoney.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import Skeleton from "../components/Skeleton.jsx";
 import { useTheme } from "../hooks/useTheme.js";
 import { useReducedMotion } from "../hooks/useReducedMotion.js";
 import { useCountUp } from "../hooks/useCountUp.js";
@@ -122,6 +125,29 @@ function StatCard({ label, value, tone = "ink", format = "money" }) {
 
 const truncate = (s, n = 9) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
+// Branded loading placeholder: the stat-card grid + a chart block.
+function StatsSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-black/5 bg-card px-4 py-3 shadow-soft dark:border-white/10"
+          >
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-2 h-6 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-2xl border border-black/5 bg-card px-4 py-4 shadow-soft dark:border-white/10">
+        <Skeleton className="mb-4 h-4 w-32" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 export default function StatisticsPage({ nav }) {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState("loading"); // loading | ready | error
@@ -141,9 +167,9 @@ export default function StatisticsPage({ nav }) {
 
   if (status === "loading") {
     return (
-      <div>
+      <div className="animate-page">
         <BackButton onClick={nav.back} />
-        <p className="text-sm text-muted">טוען…</p>
+        <StatsSkeleton />
       </div>
     );
   }
@@ -223,9 +249,20 @@ export default function StatisticsPage({ nav }) {
         )}
 
         {data.gift_count === 0 ? (
-          <div className="rounded-2xl border border-black/5 bg-card px-5 py-10 text-center text-sm text-muted dark:border-white/10">
-            אין עדיין נתונים להצגה. הוסיפו מתנות כדי לראות סטטיסטיקות.
-          </div>
+          <EmptyState
+            icon={BarChart3}
+            title="אין עדיין נתונים להצגה"
+            description="הוסיפו מתנות כדי לראות סטטיסטיקות וגרפים."
+            action={
+              <button
+                type="button"
+                onClick={nav.goHome}
+                className="focus-ring inline-flex cursor-pointer items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-emerald-700 active:scale-[0.98] dark:bg-emerald-500 dark:hover:bg-emerald-400"
+              >
+                הוספת מתנה
+              </button>
+            }
+          />
         ) : (
           <div className="space-y-5">
             {/* 1) Given vs received */}

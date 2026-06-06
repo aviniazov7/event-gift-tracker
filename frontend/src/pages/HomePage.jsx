@@ -7,10 +7,52 @@ import {
   getTransactions,
   quickAdd,
 } from "../api/client.js";
+import { CalendarPlus } from "lucide-react";
 import SummaryCards from "../components/SummaryCards.jsx";
 import QuickAddForm from "../components/QuickAddForm.jsx";
 import EventCard from "../components/EventCard.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import Skeleton from "../components/Skeleton.jsx";
+
+// Branded loading placeholder mirroring the balance cards + event list.
+function HomeSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-black/5 bg-card px-5 py-5 shadow-soft dark:border-white/10">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="mt-2 h-9 w-44" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+            >
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="mt-2 h-7 w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <ul className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <li
+            key={i}
+            className="flex items-center justify-between rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10"
+          >
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-6 w-20" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function HomePage({ nav }) {
   const [events, setEvents] = useState([]);
@@ -79,7 +121,7 @@ export default function HomePage({ nav }) {
   }
 
   if (status === "loading") {
-    return <p className="text-sm text-muted">טוען…</p>;
+    return <HomeSkeleton />;
   }
 
   if (status === "error") {
@@ -107,9 +149,28 @@ export default function HomePage({ nav }) {
         </div>
 
         {events.length === 0 ? (
-          <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
-            אין אירועים עדיין. הוסיפו אירוע ראשון למעלה.
-          </div>
+          <EmptyState
+            icon={CalendarPlus}
+            title="עדיין אין אירועים"
+            description="הוסיפו את המתנה הראשונה שלכם דרך הטופס למעלה."
+            action={
+              <button
+                type="button"
+                onClick={() => {
+                  const reduce = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                  ).matches;
+                  document.getElementById("root")?.scrollTo({
+                    top: 0,
+                    behavior: reduce ? "auto" : "smooth",
+                  });
+                }}
+                className="focus-ring inline-flex cursor-pointer items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-emerald-700 active:scale-[0.98] dark:bg-emerald-500 dark:hover:bg-emerald-400"
+              >
+                הוספת מתנה ראשונה
+              </button>
+            }
+          />
         ) : (
           <ul className="space-y-3">
             {events.map((ev, i) => (

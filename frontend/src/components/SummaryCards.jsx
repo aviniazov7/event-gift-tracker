@@ -17,8 +17,13 @@ const toneAccent = {
 
 function Card({ label, value, tone, big = false }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-black/5 bg-card px-5 py-4 shadow-soft dark:border-white/10">
-      {/* Brand-tinted depth accent — soft, never loud. */}
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-black/5 bg-card px-5 shadow-soft dark:border-white/10 ${
+        big ? "py-5" : "py-4"
+      }`}
+    >
+      {/* Brand-tinted depth accent — soft, never loud; a touch stronger on the
+          balance card so it reads as the hero figure. */}
       <div
         className={`pointer-events-none absolute inset-0 bg-gradient-to-bl to-transparent ${toneAccent[tone]}`}
         aria-hidden="true"
@@ -27,8 +32,9 @@ function Card({ label, value, tone, big = false }) {
         <p className="text-xs font-medium text-muted">{label}</p>
         <AnimatedMoney
           value={value}
-          className={`mt-1 block font-semibold ${
-            big ? "text-3xl" : "text-2xl"
+          duration={big ? 950 : 700}
+          className={`mt-1 block font-semibold tracking-tight ${
+            big ? "text-4xl" : "text-2xl"
           } ${toneText[tone]}`}
         />
       </div>

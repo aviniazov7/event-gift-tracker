@@ -14,11 +14,11 @@ export default function EventCard({ event, stats, index = 0, onOpen, onDelete })
       className="animate-row"
       style={{ "--row-delay": `${Math.min(index, 8) * 40}ms` }}
     >
-      <div className="flex items-stretch rounded-2xl border border-black/5 bg-card shadow-soft transition duration-200 hover:border-emerald-300 hover:shadow-md dark:border-white/10 dark:hover:border-emerald-500/40">
+      <div className="lift flex items-stretch rounded-2xl border border-black/5 bg-card shadow-soft dark:border-white/10">
         <button
           type="button"
           onClick={() => onOpen(event.id)}
-          className="focus-ring flex flex-1 items-center justify-between gap-3 rounded-2xl px-5 py-4 text-right active:scale-[0.99]"
+          className="focus-ring flex flex-1 items-center justify-between gap-3 rounded-2xl px-5 py-4 text-right"
         >
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2">

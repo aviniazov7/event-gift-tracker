@@ -6,11 +6,14 @@ import {
   getTransactions,
   quickAdd,
 } from "../api/client.js";
+import { Gift } from "lucide-react";
 import BackButton from "../components/BackButton.jsx";
 import QuickAddGift from "../components/QuickAddGift.jsx";
 import DirectionBadge from "../components/DirectionBadge.jsx";
 import DeleteButton from "../components/DeleteButton.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import Skeleton from "../components/Skeleton.jsx";
 import { eventTypeLabels } from "../utils/labels.js";
 import { formatMoney } from "../utils/money.js";
 import { formatDate } from "../utils/dates.js";
@@ -117,7 +120,14 @@ export default function EventDetail({ eventId, nav }) {
   }
 
   if (status === "loading") {
-    return <p className="text-sm text-muted">טוען…</p>;
+    return (
+      <div className="animate-page space-y-4">
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+      </div>
+    );
   }
 
   if (status === "error" || !event) {
@@ -162,9 +172,11 @@ export default function EventDetail({ eventId, nav }) {
           </div>
 
           {gifts.length === 0 ? (
-            <div className="rounded-2xl border border-black/5 bg-card px-5 py-8 text-center text-sm text-muted dark:border-white/10">
-              אין מתנות לאירוע זה עדיין.
-            </div>
+            <EmptyState
+              icon={Gift}
+              title="אין מתנות לאירוע זה עדיין"
+              description="הוסיפו מתנה דרך הטופס למעלה."
+            />
           ) : (
             <ul className="space-y-3">
               {gifts.map((gift, i) => (
