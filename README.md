@@ -78,8 +78,9 @@ and light**, fully RTL.
 - `@react-oauth/google`
 
 **Deployment**
-- **Render** — managed Postgres + Dockerised API + static frontend
-  (see [`render.yaml`](render.yaml)).
+- **Render** — Dockerised API + static frontend (see [`render.yaml`](render.yaml)).
+- **Neon** — external serverless Postgres (free tier); `DATABASE_URL` is set as a
+  secret in the Render dashboard, not committed.
 
 ---
 
@@ -145,18 +146,38 @@ docker compose up --build
 ```
 
 The API is then at **http://localhost:8000**, with Swagger docs at
-**http://localhost:8000/docs**.
+**http://localhost:8000/docs**. `docker compose` runs a **local Postgres** for
+development; migrations apply automatically on container start.
 
 Required backend env vars (see [`.env.example`](.env.example)):
 
 | Var | Purpose |
 | --- | --- |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Postgres credentials |
-| `DATABASE_URL` | SQLAlchemy connection string (host = `db` in compose) |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Local Postgres credentials (compose `db` service) |
+| `DATABASE_URL` | SQLAlchemy connection string (host = `db` locally) |
 | `CORS_ALLOW_ORIGINS` | Comma-separated browser origins allowed to call the API |
 | `GOOGLE_CLIENT_ID` | Google OAuth client id (verifies sign-in tokens) |
 | `JWT_SECRET` | Secret for signing the app's JWTs (use a long random value) |
 | `JWT_ALGORITHM` / `JWT_EXPIRE_MINUTES` | JWT signing algorithm / token lifetime |
+
+### Database — local vs production
+
+- **Local:** `docker compose` provides Postgres via the `db` service; the
+  default `DATABASE_URL` in `.env` points at it (`@db:5432`). Nothing else to do.
+- **Production:** the database is an **external serverless Postgres
+  ([Neon](https://neon.tech), free tier)** — there is no Render-managed DB.
+  Set `DATABASE_URL` as a secret in the Render dashboard (`sync: false` in
+  [`render.yaml`](render.yaml)) to the Neon connection string, **including
+  `?sslmode=require`**; prefer Neon's *pooled* host (`...-pooler...`). Example:
+
+  ```
+  postgresql+psycopg2://USER:PASSWORD@ep-xxx-pooler.REGION.aws.neon.tech/giftledger?sslmode=require
+  ```
+
+  The SQLAlchemy engine is tuned for a scale-to-zero DB: `pool_pre_ping`
+  replaces dropped idle connections, `pool_recycle` retires stale ones, and SSL
+  is required for remote hosts. Migrations run on container start against
+  whatever `DATABASE_URL` is set.
 
 ### Frontend (Vite dev server)
 
