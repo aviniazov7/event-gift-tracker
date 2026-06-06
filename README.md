@@ -11,6 +11,8 @@ with **Google** so every person's data is fully isolated.
 > free tier, so the very first request after idle may take ~50s while the backend
 > wakes — the login screen pre-warms it and shows progress.
 
+![GiftLedger — home screen](docs/screenshots/home-dark.png)
+
 This is a portfolio project: clean, layered architecture and readable code are
 the priority.
 
@@ -38,13 +40,25 @@ the priority.
   rings, WCAG-AA contrast, and subtle entrance / count-up animations that respect
   `prefers-reduced-motion`.
 
-## Screenshots
+## צילומי מסך · Screenshots
 
-> _Add images here._
+Captured against a demo dataset (Hebrew names; חתונה / ברית / בר מצווה / יום
+הולדת events with both given and received gifts). Every screen ships in **dark
+and light**, fully RTL.
 
-| Home / quick-add | Statistics | Transactions |
+| | Dark | Light |
 | --- | --- | --- |
-| _(screenshot)_ | _(screenshot)_ | _(screenshot)_ |
+| **דף הבית** · Home — balance, quick-add & events | ![Home (dark)](docs/screenshots/home-dark.png) | ![Home (light)](docs/screenshots/home-light.png) |
+| **תנועות** · Transactions — given/received tabs | ![Transactions (dark)](docs/screenshots/transactions-dark.png) | ![Transactions (light)](docs/screenshots/transactions-light.png) |
+| **סטטיסטיקות** · Statistics — charts | ![Statistics (dark)](docs/screenshots/statistics-dark.png) | ![Statistics (light)](docs/screenshots/statistics-light.png) |
+| **הדדיות** · Reciprocity — per-person given/received/balance | ![Reciprocity (dark)](docs/screenshots/reciprocity-dark.png) | ![Reciprocity (light)](docs/screenshots/reciprocity-light.png) |
+| **דף נחיתה** · Landing (logged-out) | ![Landing (dark)](docs/screenshots/landing-dark.png) | ![Landing (light)](docs/screenshots/landing-light.png) |
+
+**Responsive (mobile, 430px)**
+
+| Home | Statistics |
+| --- | --- |
+| ![Home (mobile)](docs/screenshots/home-mobile-dark.png) | ![Statistics (mobile)](docs/screenshots/statistics-mobile-dark.png) |
 
 ---
 
@@ -182,12 +196,13 @@ assistant, not part of the app.
 
 ## API overview
 
-All endpoints except `/health` and `POST /auth/google` require a
+All endpoints except `/health`, `/ready` and `POST /auth/google` require an
 `Authorization: Bearer <jwt>` header and are scoped to the signed-in user.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `GET` | `/health` | Liveness + DB connectivity check |
+| `GET` | `/health` | Liveness probe — instant 200, no DB (Render's health check) |
+| `GET` | `/ready` | Readiness probe — 200 only when the database is reachable |
 | `POST` | `/auth/google` | Verify a Google ID token, find-or-create the user, return an app JWT + profile |
 | `POST` | `/quick-add` | One-shot: find-or-create event + person, record a gift (atomic) |
 | `GET` | `/stats/overview` | Full stats payload: totals, counts, averages, biggest gift, breakdown by type, top people |
